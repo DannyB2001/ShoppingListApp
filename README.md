@@ -1,16 +1,35 @@
-# React + Vite
+# Shopping List App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Jednoduchá single-page aplikace pro správu sdílených nákupních seznamů. Vznikla jako školní úkol a demonstruje práci s React Routerem, lokálním stavem a modulární komponentovou architekturou.
 
-Currently, two official plugins are available:
+## Stack
+- [React 18](https://react.dev/)
+- [Vite](https://vitejs.dev/) pro vývoj/build pipeline
+- Vanilla CSS (globální reset v `src/index.css`, layout v `src/App.css`)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Struktura aplikace
+- `src/routes` – jednotlivé routy (pohled vlastníka seznamu, člena, detailní pohledy)
+- `src/routes/components` – sdílené komponenty (editable header, správa členů, seznam položek)
+- `src/data.js` – mocked data pro lokální testování
 
-## React Compiler
+## Lokální spuštění
+```bash
+npm install
+npm run dev    # vývojový server na http://localhost:5173
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Build
+```bash
+npm run build
+```
+Artefakty se uloží do `dist`. V produkci je lze servírovat libovolným statickým serverem (např. `npm run preview` nebo `serve dist`).
 
-## Expanding the ESLint configuration
+## Vlastnosti
+- Přehled všech seznamů, které vlastníte nebo kde jste členem
+- Detail nákupního seznamu (správa členů, položek, filtrování, inline editace)
+- Mockované akce jako přejmenování, archivace, přidání člena/položky – ve skutečné aplikaci je stačí navázat na backend/API
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Další kroky
+- Persistovat data (např. přes localStorage nebo API)
+- Přidat autentizaci/role
+- Nahradit alerty vlastním toast/notification systémem
