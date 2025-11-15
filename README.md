@@ -1,6 +1,6 @@
 # Shopping List App
 
-Jednoduchá single-page aplikace pro správu sdílených nákupních seznamů. Verze ukol-2.
+Jednoduchá aplikace pro správu sdílených nákupních seznamů. Verze ukol-2.
 ## Stack
 - [React 18](https://react.dev/)
 - [Vite](https://vitejs.dev/) pro vývoj/build pipeline
