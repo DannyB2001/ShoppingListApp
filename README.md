@@ -1,7 +1,6 @@
 # Shopping List App
 
-Jednoduchá single-page aplikace pro správu sdílených nákupních seznamů. Vznikla jako školní úkol a demonstruje práci s React Routerem, lokálním stavem a modulární komponentovou architekturou.
-
+Jednoduchá single-page aplikace pro správu sdílených nákupních seznamů. Verze ukol-2.
 ## Stack
 - [React 18](https://react.dev/)
 - [Vite](https://vitejs.dev/) pro vývoj/build pipeline
@@ -29,7 +28,3 @@ Artefakty se uloží do `dist`. V produkci je lze servírovat libovolným static
 - Detail nákupního seznamu (správa členů, položek, filtrování, inline editace)
 - Mockované akce jako přejmenování, archivace, přidání člena/položky – ve skutečné aplikaci je stačí navázat na backend/API
 
-## Další kroky
-- Persistovat data (např. přes localStorage nebo API)
-- Přidat autentizaci/role
-- Nahradit alerty vlastním toast/notification systémem
