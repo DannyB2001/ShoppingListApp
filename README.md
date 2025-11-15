@@ -28,3 +28,5 @@ Artefakty se uloží do `dist`. V produkci je lze servírovat libovolným static
 - Detail nákupního seznamu (správa členů, položek, filtrování, inline editace)
 - Mockované akce jako přejmenování, archivace, přidání člena/položky – ve skutečné aplikaci je stačí navázat na backend/API
 
+## GitHub
+[text](https://github.com/DannyB2001/ShoppingListApp)
