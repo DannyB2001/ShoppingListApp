@@ -1,0 +1,57 @@
+/* index.css */
+
+:root {
+  --bg: #f5f7fb;
+  --panel-bg: #fdfdff;
+  --border: #e4e7ee;
+  --primary: #3b82f6;
+  --primary-dark: #2563eb;
+  --primary-soft: #e3edff;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --danger: #ef4444;
+  --radius-lg: 18px;
+  --shadow-soft: 0 25px 50px rgba(15, 23, 42, 0.12);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont,
+    sans-serif;
+  background: radial-gradient(circle at top, #f0f5ff, #f7f8fd);
+  color: var(--text-main);
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+::selection {
+  background: rgba(59, 130, 246, 0.25);
+}
