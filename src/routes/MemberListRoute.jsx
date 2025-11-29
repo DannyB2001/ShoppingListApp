@@ -1,18 +1,36 @@
 // src/routes/MemberListRoute.jsx
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { INITIAL_SHOPPING_LIST, INITIAL_MEMBERS } from "../data";
+import { getMemberDashboardLists } from "../services/listService";
 
 function MemberListRoute() {
   const navigate = useNavigate();
   const identity = { id: "user-2", name: "Alice" };
 
-  const [lists] = useState([
-    {
-      ...INITIAL_SHOPPING_LIST,
-      members: INITIAL_MEMBERS,
-    },
-  ]);
+  const [lists, setLists] = useState([]);
+  const [loadState, setLoadState] = useState({ status: "pending", error: null });
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setLoadState({ status: "pending", error: null });
+      try {
+        const response = await getMemberDashboardLists(identity.id);
+        if (!cancelled) {
+          setLists(response);
+          setLoadState({ status: "ready", error: null });
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setLoadState({ status: "error", error: "Nepodařilo se načíst seznamy." });
+        }
+      }
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [identity.id]);
 
   const memberLists = useMemo(() => {
     return lists.filter((list) => {
@@ -54,7 +72,13 @@ function MemberListRoute() {
             </span>
           </div>
 
-          {!memberLists.length && (
+          {loadState.status === "pending" && (
+            <p className="row-label-muted">Načítám seznamy…</p>
+          )}
+          {loadState.status === "error" && (
+            <p className="row-label-muted">{loadState.error}</p>
+          )}
+          {!memberLists.length && loadState.status === "ready" && (
             <p className="row-label-muted">Nejsi členem žádného seznamu.</p>
           )}
 

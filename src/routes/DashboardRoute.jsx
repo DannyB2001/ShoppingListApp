@@ -1,75 +1,30 @@
 // src/routes/DashboardRoute.jsx
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { getOwnerDashboardLists } from "../services/listService";
 
 const IDENTITY = { id: "user-1", name: "Daniel" };
-
-const INITIAL_DASHBOARD_LISTS = [
-  {
-    id: "list-1",
-    name: "Velký nákup",
-    ownerId: "user-1",
-    ownerName: "Daniel",
-    members: [
-      { id: "user-1", name: "Daniel", isOwner: true },
-      { id: "user-2", name: "Alice", isOwner: false },
-    ],
-    itemsCount: 8,
-    unresolvedCount: 3,
-    isArchived: false,
-  },
-  {
-    id: "list-2",
-    name: "Narozeniny",
-    ownerId: "user-1",
-    ownerName: "Daniel",
-    members: [
-      { id: "user-1", name: "Daniel", isOwner: true },
-      { id: "user-3", name: "Bob", isOwner: false },
-    ],
-    itemsCount: 5,
-    unresolvedCount: 1,
-    isArchived: false,
-  },
-  {
-    id: "list-3",
-    name: "Víkend",
-    ownerId: "user-3",
-    ownerName: "Alice",
-    members: [
-      { id: "user-3", name: "Alice", isOwner: true },
-      { id: "user-1", name: "Daniel", isOwner: false },
-    ],
-    itemsCount: 6,
-    unresolvedCount: 2,
-    isArchived: false,
-  },
-  {
-    id: "list-4",
-    name: "Archivovaný seznam",
-    ownerId: "user-1",
-    ownerName: "Daniel",
-    members: [{ id: "user-1", name: "Daniel", isOwner: true }],
-    itemsCount: 4,
-    unresolvedCount: 0,
-    isArchived: true,
-  },
-];
 
 function DashboardRoute() {
   const [lists, setLists] = useState([]);
   const [loadState, setLoadState] = useState({ status: "pending", error: null });
   const [showArchived, setShowArchived] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     let cancelled = false;
     async function load() {
       setLoadState({ status: "pending", error: null });
       try {
-        // simulace serverového volání
-        await new Promise((resolve) => setTimeout(resolve, 200));
+        const response = await getOwnerDashboardLists(IDENTITY.id);
         if (!cancelled) {
-          setLists(INITIAL_DASHBOARD_LISTS);
+          const withCounts = response.map((list) => ({
+            ...list,
+            itemsCount: list.items?.length ?? 0,
+            unresolvedCount: list.items?.filter((item) => !item.isResolved).length ?? 0,
+            ownerName:
+              list.members.find((m) => m.id === list.ownerId)?.name ?? list.ownerId ?? "Vlastník",
+          }));
+          setLists(withCounts);
           setLoadState({ status: "ready", error: null });
         }
       } catch (error) {
@@ -117,6 +72,7 @@ function DashboardRoute() {
         members: [
           { id: IDENTITY.id, name: IDENTITY.name, isOwner: true },
         ],
+        items: [],
         itemsCount: 0,
         unresolvedCount: 0,
         isArchived: false,

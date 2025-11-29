@@ -7,6 +7,7 @@ import {
   INITIAL_ITEMS,
 } from "../data";
 import ShoppingListDetail from "./components/ShoppingListDetail.jsx";
+import { getListDetail } from "../services/listService";
 
 function ShoppingListDetailRoute() {
   const { listId } = useParams();
@@ -14,11 +15,6 @@ function ShoppingListDetailRoute() {
   const navigate = useNavigate();
 
   const passedList = location.state?.list;
-  const demoLists = {
-    "list-1": { ...INITIAL_SHOPPING_LIST, name: "Velký nákup" },
-    "list-2": { ...INITIAL_SHOPPING_LIST, id: "list-2", name: "Narozeniny" },
-    "list-3": { ...INITIAL_SHOPPING_LIST, id: "list-3", name: "Víkend" },
-  };
 
   function normalizeMembers(source) {
     if (!source || !source.length) {
@@ -51,13 +47,18 @@ function ShoppingListDetailRoute() {
     async function load() {
       setLoadState({ status: "pending", error: null });
       try {
-        await new Promise((resolve) => setTimeout(resolve, 150));
-        const baseList =
-          passedList ?? demoLists[listId] ?? { ...INITIAL_SHOPPING_LIST, id: listId ?? "list-1" };
+        if (passedList) {
+          setShoppingList(passedList);
+          setMembers(normalizeMembers(passedList.members ?? []));
+          setItems(passedList.items ?? []);
+          setLoadState({ status: "ready", error: null });
+          return;
+        }
+        const fromService = await getListDetail(listId);
         if (!cancelled) {
-          setShoppingList(baseList);
-          setMembers(passedList ? normalizeMembers(passedList.members ?? []) : INITIAL_MEMBERS);
-          setItems(passedList ? baseList.items ?? [] : INITIAL_ITEMS);
+          setShoppingList(fromService);
+          setMembers(normalizeMembers(fromService.members));
+          setItems(fromService.items ?? INITIAL_ITEMS);
           setLoadState({ status: "ready", error: null });
         }
       } catch (error) {
