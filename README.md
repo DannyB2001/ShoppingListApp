@@ -1,32 +1,34 @@
-# Shopping List App
+# Shopping List App (úkol 3 – pro)
 
-Jednoduchá aplikace pro správu sdílených nákupních seznamů. Verze ukol-2.
+Jednoduchá webová aplikace pro správu sdílených nákupních seznamů. Tato práce odpovídá zadání HW-3: přehled (dashboard) pro vlastníka i pozvaného uživatele, detail seznamu se správou členů a položek, základní archivace.
+
 ## Stack
-- [React 18](https://react.dev/)
-- [Vite](https://vitejs.dev/) pro vývoj/build pipeline
-- Vanilla CSS (globální reset v `src/index.css`, layout v `src/App.css`)
+- React 18
+- Vite (dev/build)
+- CSS (globální reset v `src/index.css`, layout v `src/App.css`)
 
-## Struktura aplikace
-- `src/routes` – jednotlivé routy (pohled vlastníka seznamu, člena, detailní pohledy)
-- `src/routes/components` – sdílené komponenty (editable header, správa členů, seznam položek)
-- `src/data.js` – mocked data pro lokální testování
+## Struktura a routy
+- `src/routes`
+  - `/owner_dashboard` (a `/`) – přehled všech seznamů, kde jsem vlastník; přepínání aktivní/archiv, mock vytvoření, otevření detailu.
+  - `/member_dashboard` – přehled seznamů, kam jsem pozvaný.
+  - `/owner_list/:listId` – detail seznamu pro vlastníka.
+  - `/member_list/:listId` – detail seznamu pro člena.
+- `src/routes/components` – sdílené UI (editable header, správa členů, seznam položek, toolbar).
+- `src/data.js` – mockovaná startovní data.
 
 ## Lokální spuštění
 ```bash
 npm install
-npm run dev    # vývojový server na http://localhost:5173
+npm run dev   # http://localhost:5173
 ```
 
 ## Build
 ```bash
 npm run build
 ```
-Artefakty se uloží do `dist`. V produkci je lze servírovat libovolným statickým serverem (např. `npm run preview` nebo `serve dist`).
+Výstup je v `dist` (pro náhled `npm run preview`).
 
 ## Vlastnosti
-- Přehled všech seznamů, které vlastníte nebo kde jste členem
-- Detail nákupního seznamu (správa členů, položek, filtrování, inline editace)
-- Mockované akce jako přejmenování, archivace, přidání člena/položky – ve skutečné aplikaci je stačí navázat na backend/API
-
-## GitHub
-[text](https://github.com/DannyB2001/ShoppingListApp)
+- Dashboard vlastníka: vytvořit mock seznam, archivace/obnovení, mazání s potvrzením, otevření detailu; zvláštní sekce pro seznamy, kde jsem pozvaný.
+- Detail seznamu: přejmenování, správa členů (přidat/odebrat/odejít), položky (přidat/mazat/editovat, filtrovat nevyřešené), kopírovací/„share“ akce jako alerty.
+- Mock data žijí jen v paměti.
