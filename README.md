@@ -1,4 +1,4 @@
-# Shopping List App (úkol 3 – pro)
+# Shopping List App HW-3
 
 Jednoduchá webová aplikace pro správu sdílených nákupních seznamů. Tato práce odpovídá zadání HW-3: přehled (dashboard) pro vlastníka i pozvaného uživatele, detail seznamu se správou členů a položek, základní archivace.
 
