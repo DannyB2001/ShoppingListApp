@@ -12,9 +12,11 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* DASHBOARD */}
+        {/* DASHBOARD (default) */}
         <Route path="/" element={<DashboardRoute />} />
+        <Route path="/owner_dashboard" element={<DashboardRoute />} />
         <Route path="/dashboard" element={<DashboardRoute />} />
+        <Route path="/member_dashboard" element={<MemberListRoute />} />
 
         {/* OWNERS */}
         <Route path="/owner_list" element={<OwnerListRoute />} />

@@ -6,9 +6,7 @@ function MemberRow({ member, canBeRemoved, isCurrentUser, onRemove }) {
     <li className="row">
       <div className="row-main">
         <span className="item-name">{member.name}</span>
-        {member.isOwner && (
-          <span className="badge badge-owner">Vlastník</span>
-        )}
+        {member.isOwner && <span className="badge badge-owner">Vlastník</span>}
         {isCurrentUser && <span className="badge badge-me">Ty</span>}
       </div>
       <div className="row-actions">

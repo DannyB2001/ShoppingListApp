@@ -1,9 +1,10 @@
 // src/routes/MemberListRoute.jsx
 import React, { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { INITIAL_SHOPPING_LIST, INITIAL_MEMBERS } from "../data";
 
 function MemberListRoute() {
+  const navigate = useNavigate();
   const identity = { id: "user-2", name: "Alice" };
 
   const [lists] = useState([
@@ -33,6 +34,13 @@ function MemberListRoute() {
               Aktuální přehled nákupních seznamů, kam tě někdo pozval.
             </p>
           </div>
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={() => navigate("/")}
+          >
+            ← Hlavní stránka
+          </button>
         </header>
 
         <section className="panel">
@@ -63,7 +71,11 @@ function MemberListRoute() {
                     </span>
                   </div>
                   <div className="list-card-row">
-                    <Link className="btn btn-primary" to={`/member_list/${list.id}`}>
+                    <Link
+                      className="btn btn-primary"
+                      to={`/member_list/${list.id}`}
+                      state={{ list }}
+                    >
                       Otevřít
                     </Link>
                   </div>

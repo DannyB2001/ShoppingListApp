@@ -1,16 +1,19 @@
 // src/routes/DashboardRoute.jsx
 import React, { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const IDENTITY = { id: "user-1", name: "Daniel" };
 
 const INITIAL_DASHBOARD_LISTS = [
   {
     id: "list-1",
-    name: "Velky nakup",
+    name: "Velký nákup",
     ownerId: "user-1",
     ownerName: "Daniel",
-    members: ["user-1", "user-2"],
+    members: [
+      { id: "user-1", name: "Daniel", isOwner: true },
+      { id: "user-2", name: "Alice", isOwner: false },
+    ],
     itemsCount: 8,
     unresolvedCount: 3,
     isArchived: false,
@@ -20,27 +23,33 @@ const INITIAL_DASHBOARD_LISTS = [
     name: "Narozeniny",
     ownerId: "user-1",
     ownerName: "Daniel",
-    members: ["user-1", "user-3"],
+    members: [
+      { id: "user-1", name: "Daniel", isOwner: true },
+      { id: "user-3", name: "Bob", isOwner: false },
+    ],
     itemsCount: 5,
     unresolvedCount: 1,
     isArchived: false,
   },
   {
     id: "list-3",
-    name: "Vikend",
+    name: "Víkend",
     ownerId: "user-3",
     ownerName: "Alice",
-    members: ["user-1", "user-3"],
+    members: [
+      { id: "user-3", name: "Alice", isOwner: true },
+      { id: "user-1", name: "Daniel", isOwner: false },
+    ],
     itemsCount: 6,
     unresolvedCount: 2,
     isArchived: false,
   },
   {
     id: "list-4",
-    name: "Archivovany seznam",
+    name: "Archivovaný seznam",
     ownerId: "user-1",
     ownerName: "Daniel",
-    members: ["user-1"],
+    members: [{ id: "user-1", name: "Daniel", isOwner: true }],
     itemsCount: 4,
     unresolvedCount: 0,
     isArchived: true,
@@ -48,7 +57,6 @@ const INITIAL_DASHBOARD_LISTS = [
 ];
 
 function DashboardRoute() {
-  const navigate = useNavigate();
   const [lists, setLists] = useState(INITIAL_DASHBOARD_LISTS);
   const [showArchived, setShowArchived] = useState(false);
 
@@ -66,13 +74,14 @@ function DashboardRoute() {
     () =>
       visibleLists.filter(
         (list) =>
-          list.ownerId !== IDENTITY.id && list.members.some((memberId) => memberId === IDENTITY.id)
+          list.ownerId !== IDENTITY.id &&
+          list.members.some((member) => member.id === IDENTITY.id)
       ),
     [visibleLists]
   );
 
   function handleCreate() {
-    const name = window.prompt("Zadej nazev noveho seznamu");
+    const name = window.prompt("Zadej název nového seznamu");
     const trimmed = name?.trim();
     if (!trimmed) return;
     setLists((prev) => [
@@ -81,7 +90,9 @@ function DashboardRoute() {
         name: trimmed,
         ownerId: IDENTITY.id,
         ownerName: IDENTITY.name,
-        members: [IDENTITY.id],
+        members: [
+          { id: IDENTITY.id, name: IDENTITY.name, isOwner: true },
+        ],
         itemsCount: 0,
         unresolvedCount: 0,
         isArchived: false,
@@ -103,25 +114,24 @@ function DashboardRoute() {
   }
 
   function handleDelete(listId) {
+    const confirmed = window.confirm("Opravdu smazat tento seznam?");
+    if (!confirmed) return;
     setLists((prev) => prev.filter((list) => list.id !== listId));
-  }
-
-  function handleOpen(list) {
-    const isOwner = list.ownerId === IDENTITY.id;
-    navigate(isOwner ? `/owner_list/${list.id}` : `/member_list/${list.id}`);
   }
 
   function handleLeave(listId) {
     setLists((prev) =>
       prev.map((list) =>
         list.id === listId
-          ? { ...list, members: list.members.filter((memberId) => memberId !== IDENTITY.id) }
+          ? { ...list, members: list.members.filter((member) => member.id !== IDENTITY.id) }
           : list
       )
     );
   }
 
   function renderListRow(list, isOwner) {
+    const targetHref = isOwner ? `/owner_list/${list.id}` : `/member_list/${list.id}`;
+
     return (
       <React.Fragment key={list.id}>
         <article className="list-card">
@@ -132,14 +142,18 @@ function DashboardRoute() {
           <div className="list-card-body">
             <div className="list-card-row">
               <span className="row-label-muted">
-                {list.unresolvedCount} nevyresenych / {list.itemsCount} polozek
+                {list.unresolvedCount} nevyřešených / {list.itemsCount} položek
               </span>
-              <span className="row-label-muted">{isOwner ? "Moje sprava" : "Jsem clen"}</span>
+              <span className="row-label-muted">{isOwner ? "Moje správa" : "Jsem člen"}</span>
             </div>
             <div className="list-card-row">
-              <button type="button" className="btn btn-primary" onClick={() => handleOpen(list)}>
-                Otevrit
-              </button>
+              <Link
+                className="btn btn-primary"
+                to={targetHref}
+                state={{ list }}
+              >
+                Otevřít
+              </Link>
               {isOwner ? (
                 <>
                   <button
@@ -169,8 +183,8 @@ function DashboardRoute() {
         </article>
         <div className="list-card owner-card">
           <div className="list-card-row">
-            <h4 className="owner-card-title">Vlastnik</h4>
-            <span className="row-label-muted">{list.members.length} clenu</span>
+            <h4 className="owner-card-title">Vlastník</h4>
+            <span className="row-label-muted">{list.members.length} členů</span>
           </div>
           <div className="owner-card-name">{list.ownerName}</div>
         </div>
@@ -183,23 +197,23 @@ function DashboardRoute() {
       <div className="page-card">
         <header className="detail-header">
           <div className="detail-title-block">
-            <h1 className="title-text">Prehled nakupnich seznamu</h1>
-            <p className="title-subtext">Rozdeleno podle role: vlastnik nebo pozvany clen.</p>
+            <h1 className="title-text">Přehled nákupních seznamů</h1>
+            <p className="title-subtext">Rozděleno podle role: vlastník nebo pozvaný člen.</p>
           </div>
         </header>
 
         <div className="dashboard-options">
-          <span className="row-label-muted">Moznosti</span>
+          <span className="row-label-muted">Možnosti</span>
           <div className="dashboard-options-actions">
             <button type="button" className="btn btn-primary" onClick={handleCreate}>
-              Vytvorit seznam
+              Vytvořit seznam
             </button>
             <button
               type="button"
               className="btn btn-ghost"
               onClick={() => setShowArchived((prev) => !prev)}
             >
-              {showArchived ? "Zobrazit aktivni" : "Zobrazit archivovane"}
+              {showArchived ? "Zobrazit aktivní" : "Zobrazit archivované"}
             </button>
           </div>
         </div>
@@ -208,13 +222,13 @@ function DashboardRoute() {
           <div className="panel-header">
             <div>
               <div className="panel-eyebrow">Moje seznamy</div>
-              <h2>Vlastnim</h2>
+              <h2>Vlastním</h2>
             </div>
             <span className="row-label-muted">{ownedLists.length} celkem</span>
           </div>
 
           {!ownedLists.length && (
-            <p className="row-label-muted">Zadne seznamy ve sprave pro tento pohled.</p>
+            <p className="row-label-muted">Žádné seznamy ve správě pro tento pohled.</p>
           )}
 
           <div className="dashboard-grid">
@@ -225,14 +239,14 @@ function DashboardRoute() {
         <section className="panel dashboard-panel">
           <div className="panel-header">
             <div>
-              <div className="panel-eyebrow">Uzivatel</div>
-              <h2>Jsem prizvany</h2>
+              <div className="panel-eyebrow">Uživatel</div>
+              <h2>Jsem přizvaný</h2>
             </div>
             <span className="row-label-muted">{invitedLists.length} celkem</span>
           </div>
 
           {!invitedLists.length && (
-            <p className="row-label-muted">Momentalne nejsi clenem zadneho seznamu.</p>
+            <p className="row-label-muted">Momentálně nejsi členem žádného seznamu.</p>
           )}
 
           <div className="dashboard-grid">

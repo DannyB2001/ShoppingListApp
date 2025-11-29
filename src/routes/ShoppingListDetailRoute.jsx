@@ -1,6 +1,6 @@
 // src/routes/ShoppingListDetailRoute.jsx
 import React, { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   INITIAL_SHOPPING_LIST,
   INITIAL_MEMBERS,
@@ -10,11 +10,44 @@ import ShoppingListDetail from "./components/ShoppingListDetail.jsx";
 
 function ShoppingListDetailRoute() {
   const { listId } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
 
-  const [shoppingList, setShoppingList] = useState(INITIAL_SHOPPING_LIST);
-  const [members, setMembers] = useState(INITIAL_MEMBERS);
-  const [items, setItems] = useState(INITIAL_ITEMS);
+  const passedList = location.state?.list;
+  const demoLists = {
+    "list-1": { ...INITIAL_SHOPPING_LIST, name: "Velky nakup" },
+    "list-2": { ...INITIAL_SHOPPING_LIST, id: "list-2", name: "Narozeniny" },
+    "list-3": { ...INITIAL_SHOPPING_LIST, id: "list-3", name: "Vikend" },
+  };
+
+  const [shoppingList, setShoppingList] = useState(
+    passedList ??
+      demoLists[listId] ?? { ...INITIAL_SHOPPING_LIST, id: listId ?? "list-1" }
+  );
+  function normalizeMembers(source) {
+    if (!source || !source.length) {
+      return INITIAL_MEMBERS;
+    }
+    // Elements are objects already
+    if (typeof source[0] === "object") {
+      return source.map((member) => ({
+        id: member.id,
+        name: member.name ?? member.id,
+        isOwner: Boolean(member.isOwner || member.id === (passedList?.ownerId ?? "user-1")),
+      }));
+    }
+    // Elements are identifiers (strings)
+    return source.map((id, index) => ({
+      id,
+      name: `Uzivatel ${index + 1}`,
+      isOwner: id === (passedList?.ownerId ?? "user-1"),
+    }));
+  }
+
+  const initialMembers = passedList ? normalizeMembers(passedList.members ?? []) : INITIAL_MEMBERS;
+
+  const [members, setMembers] = useState(initialMembers);
+  const [items, setItems] = useState(passedList ? (passedList.items ?? []) : INITIAL_ITEMS);
   const [showUnresolvedOnly, setShowUnresolvedOnly] = useState(false);
 
   const identity = { id: "user-1", name: "Daniel Brož" };
@@ -81,11 +114,11 @@ function ShoppingListDetailRoute() {
   }
 
   function handleShareList() {
-    alert("Sdílení seznamu zatím není připravené.");
+    alert("Sdileni seznamu zatim neni pripravene.");
   }
 
   function handleBack() {
-    navigate("/owner_list");
+    navigate("/owner_dashboard");
   }
 
   return (

@@ -1,6 +1,6 @@
 // src/routes/MemberListDetailRoute.jsx
 import React, { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   INITIAL_SHOPPING_LIST,
   INITIAL_MEMBERS,
@@ -10,13 +10,44 @@ import ShoppingListDetail from "./components/ShoppingListDetail";
 
 function MemberListDetailRoute() {
   const { listId } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
 
   const identity = { id: "user-2", name: "Alice" };
 
-  const [shoppingList, setShoppingList] = useState(INITIAL_SHOPPING_LIST);
-  const [members, setMembers] = useState(INITIAL_MEMBERS);
-  const [items, setItems] = useState(INITIAL_ITEMS);
+  const passedList = location.state?.list;
+  const demoLists = {
+    "list-1": { ...INITIAL_SHOPPING_LIST, name: "Velky nakup" },
+    "list-2": { ...INITIAL_SHOPPING_LIST, id: "list-2", name: "Narozeniny" },
+    "list-3": { ...INITIAL_SHOPPING_LIST, id: "list-3", name: "Vikend" },
+  };
+
+  const [shoppingList, setShoppingList] = useState(
+    passedList ??
+      demoLists[listId] ?? { ...INITIAL_SHOPPING_LIST, id: listId ?? "list-1" }
+  );
+  function normalizeMembers(source) {
+    if (!source || !source.length) {
+      return INITIAL_MEMBERS;
+    }
+    if (typeof source[0] === "object") {
+      return source.map((member) => ({
+        id: member.id,
+        name: member.name ?? member.id,
+        isOwner: Boolean(member.isOwner || member.id === (passedList?.ownerId ?? "user-1")),
+      }));
+    }
+    return source.map((id, index) => ({
+      id,
+      name: `Uzivatel ${index + 1}`,
+      isOwner: id === (passedList?.ownerId ?? "user-1"),
+    }));
+  }
+
+  const initialMembers = passedList ? normalizeMembers(passedList.members ?? []) : INITIAL_MEMBERS;
+
+  const [members, setMembers] = useState(initialMembers);
+  const [items, setItems] = useState(passedList ? (passedList.items ?? []) : INITIAL_ITEMS);
   const [showUnresolvedOnly, setShowUnresolvedOnly] = useState(false);
 
   if (listId !== shoppingList.id) {
@@ -81,16 +112,16 @@ function MemberListDetailRoute() {
   }
 
   function handleShareList() {
-    alert("Sdílení seznamu pro členy zatím není připravené.");
+    alert("Sdileni seznamu pro cleny zatim neni pripravene.");
   }
 
   function handleBack() {
-    navigate("/member_list");
+    navigate("/member_dashboard");
   }
 
   function handleLeaveList() {
     setMembers((prev) => prev.filter((member) => member.id !== identity.id));
-    navigate("/member_list");
+    navigate("/member_dashboard");
   }
 
   return (

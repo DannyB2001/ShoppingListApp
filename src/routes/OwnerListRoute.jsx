@@ -1,7 +1,7 @@
 // src/routes/OwnerListRoute.jsx
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { INITIAL_ITEMS, INITIAL_SHOPPING_LIST } from "../data";
+import { INITIAL_ITEMS, INITIAL_MEMBERS, INITIAL_SHOPPING_LIST } from "../data";
 
 function ListCard({ list, onRename, children }) {
   const [editing, setEditing] = useState(false);
@@ -70,6 +70,7 @@ function OwnerListRoute() {
       isArchived: false,
       itemsCount: INITIAL_ITEMS.length,
       unresolvedCount: INITIAL_ITEMS.filter((item) => !item.isResolved).length,
+      members: INITIAL_MEMBERS,
     },
   ]);
 
@@ -78,6 +79,10 @@ function OwnerListRoute() {
 
   function handleCreateList() {
     alert("Vytvoření nového seznamu zatím není implementováno.");
+  }
+
+  function handleGoHome() {
+    navigate("/");
   }
 
   function handleRename(listId, name) {
@@ -112,13 +117,22 @@ function OwnerListRoute() {
               Přehled všech nákupních seznamů, kde jsi vlastníkem.
             </p>
           </div>
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={handleCreateList}
-          >
-            + Nový seznam
-          </button>
+          <div className="dashboard-options-actions">
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={handleGoHome}
+            >
+              ← Hlavní stránka
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={handleCreateList}
+            >
+              + Nový seznam
+            </button>
+          </div>
         </header>
 
         <section className="panel">
@@ -132,7 +146,7 @@ function OwnerListRoute() {
 
           {!activeLists.length && (
             <p className="row-label-muted">
-              Nemáš žádné aktivní nákupní seznamy.
+              Nemáte žádné aktivní nákupní seznamy.
             </p>
           )}
 
@@ -152,7 +166,9 @@ function OwnerListRoute() {
                   <button
                     type="button"
                     className="btn btn-primary"
-                    onClick={() => navigate(`/owner_list/${list.id}`)}
+                    onClick={() =>
+                      navigate(`/owner_list/${list.id}`, { state: { list } })
+                    }
                   >
                     Otevřít
                   </button>
@@ -198,7 +214,9 @@ function OwnerListRoute() {
                   <button
                     type="button"
                     className="btn btn-primary"
-                    onClick={() => navigate(`/owner_list/${list.id}`)}
+                    onClick={() =>
+                      navigate(`/owner_list/${list.id}`, { state: { list } })
+                    }
                   >
                     Otevřít
                   </button>
@@ -217,7 +235,7 @@ function OwnerListRoute() {
 
         <footer className="detail-toolbar">
           <span className="row-label-muted">
-            Pohled člena najdeš na <Link to="/member_list">/member_list</Link>.
+            Pohled člena najdeš na <Link to="/member_dashboard">/member_dashboard</Link>.
           </span>
         </footer>
       </div>
