@@ -1,5 +1,5 @@
 // src/routes/ShoppingListDetailRoute.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   INITIAL_SHOPPING_LIST,
@@ -15,20 +15,15 @@ function ShoppingListDetailRoute() {
 
   const passedList = location.state?.list;
   const demoLists = {
-    "list-1": { ...INITIAL_SHOPPING_LIST, name: "Velky nakup" },
+    "list-1": { ...INITIAL_SHOPPING_LIST, name: "Velký nákup" },
     "list-2": { ...INITIAL_SHOPPING_LIST, id: "list-2", name: "Narozeniny" },
-    "list-3": { ...INITIAL_SHOPPING_LIST, id: "list-3", name: "Vikend" },
+    "list-3": { ...INITIAL_SHOPPING_LIST, id: "list-3", name: "Víkend" },
   };
 
-  const [shoppingList, setShoppingList] = useState(
-    passedList ??
-      demoLists[listId] ?? { ...INITIAL_SHOPPING_LIST, id: listId ?? "list-1" }
-  );
   function normalizeMembers(source) {
     if (!source || !source.length) {
       return INITIAL_MEMBERS;
     }
-    // Elements are objects already
     if (typeof source[0] === "object") {
       return source.map((member) => ({
         id: member.id,
@@ -36,24 +31,72 @@ function ShoppingListDetailRoute() {
         isOwner: Boolean(member.isOwner || member.id === (passedList?.ownerId ?? "user-1")),
       }));
     }
-    // Elements are identifiers (strings)
     return source.map((id, index) => ({
       id,
-      name: `Uzivatel ${index + 1}`,
+      name: `Uživatel ${index + 1}`,
       isOwner: id === (passedList?.ownerId ?? "user-1"),
     }));
   }
 
-  const initialMembers = passedList ? normalizeMembers(passedList.members ?? []) : INITIAL_MEMBERS;
-
-  const [members, setMembers] = useState(initialMembers);
-  const [items, setItems] = useState(passedList ? (passedList.items ?? []) : INITIAL_ITEMS);
+  const [shoppingList, setShoppingList] = useState(null);
+  const [members, setMembers] = useState([]);
+  const [items, setItems] = useState([]);
   const [showUnresolvedOnly, setShowUnresolvedOnly] = useState(false);
+  const [loadState, setLoadState] = useState({ status: "pending", error: null });
 
   const identity = { id: "user-1", name: "Daniel Brož" };
 
-  if (listId !== shoppingList.id) {
-    console.warn("Zadané ID seznamu neodpovídá dostupným datům.");
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setLoadState({ status: "pending", error: null });
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 150));
+        const baseList =
+          passedList ?? demoLists[listId] ?? { ...INITIAL_SHOPPING_LIST, id: listId ?? "list-1" };
+        if (!cancelled) {
+          setShoppingList(baseList);
+          setMembers(passedList ? normalizeMembers(passedList.members ?? []) : INITIAL_MEMBERS);
+          setItems(passedList ? baseList.items ?? [] : INITIAL_ITEMS);
+          setLoadState({ status: "ready", error: null });
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setLoadState({ status: "error", error: "Nepodařilo se načíst detail seznamu." });
+        }
+      }
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [listId, passedList]);
+
+  if (loadState.status === "pending" || !shoppingList) {
+    return (
+      <div className="page-root">
+        <div className="page-card">
+          <p className="row-label-muted">Načítám detail seznamu…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loadState.status === "error") {
+    return (
+      <div className="page-root">
+        <div className="page-card">
+          <p className="row-label-muted">{loadState.error}</p>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => navigate("/owner_dashboard")}
+          >
+            Zpět na přehled
+          </button>
+        </div>
+      </div>
+    );
   }
 
   function handleRenameList(newName) {
@@ -114,7 +157,7 @@ function ShoppingListDetailRoute() {
   }
 
   function handleShareList() {
-    alert("Sdileni seznamu zatim neni pripravene.");
+    alert("Sdílení seznamu zatím není připraveno.");
   }
 
   function handleBack() {

@@ -57,8 +57,32 @@ const INITIAL_DASHBOARD_LISTS = [
 ];
 
 function DashboardRoute() {
-  const [lists, setLists] = useState(INITIAL_DASHBOARD_LISTS);
+  const [lists, setLists] = useState([]);
+  const [loadState, setLoadState] = useState({ status: "pending", error: null });
   const [showArchived, setShowArchived] = useState(false);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setLoadState({ status: "pending", error: null });
+      try {
+        // simulace serverového volání
+        await new Promise((resolve) => setTimeout(resolve, 200));
+        if (!cancelled) {
+          setLists(INITIAL_DASHBOARD_LISTS);
+          setLoadState({ status: "ready", error: null });
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setLoadState({ status: "error", error: "Nepodařilo se načíst seznamy." });
+        }
+      }
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const visibleLists = useMemo(
     () => lists.filter((list) => (showArchived ? list.isArchived : !list.isArchived)),
@@ -227,7 +251,13 @@ function DashboardRoute() {
             <span className="row-label-muted">{ownedLists.length} celkem</span>
           </div>
 
-          {!ownedLists.length && (
+          {loadState.status === "pending" && (
+            <p className="row-label-muted">Načítám seznamy…</p>
+          )}
+          {loadState.status === "error" && (
+            <p className="row-label-muted">{loadState.error}</p>
+          )}
+          {!ownedLists.length && loadState.status === "ready" && (
             <p className="row-label-muted">Žádné seznamy ve správě pro tento pohled.</p>
           )}
 
@@ -245,7 +275,13 @@ function DashboardRoute() {
             <span className="row-label-muted">{invitedLists.length} celkem</span>
           </div>
 
-          {!invitedLists.length && (
+          {loadState.status === "pending" && (
+            <p className="row-label-muted">Načítám seznamy…</p>
+          )}
+          {loadState.status === "error" && (
+            <p className="row-label-muted">{loadState.error}</p>
+          )}
+          {!invitedLists.length && loadState.status === "ready" && (
             <p className="row-label-muted">Momentálně nejsi členem žádného seznamu.</p>
           )}
 
