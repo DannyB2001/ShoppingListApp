@@ -1,11 +1,18 @@
 // src/services/listService.js
-// Jednoduchý mock "serveru" pro načítání seznamů
+// Jednoduchý mock "serveru" pro načítání seznamů.
+// Přepínač mocku: VITE_USE_MOCK=true (default). Při false je reálné API neimplementované.
 
 import {
   INITIAL_ITEMS,
   INITIAL_MEMBERS,
   INITIAL_SHOPPING_LIST,
 } from "../data";
+
+const USE_MOCK =
+  (typeof import.meta !== "undefined" &&
+    import.meta.env &&
+    import.meta.env.VITE_USE_MOCK === "true") ||
+  import.meta.env.VITE_USE_MOCK === undefined; // default: mock zapnutý
 
 const MOCK_LISTS = [
   {
@@ -58,11 +65,17 @@ function delay(ms = 200) {
 }
 
 export async function getAllLists() {
+  if (!USE_MOCK) {
+    throw new Error("Reálné API není implementováno. Zapněte mock (VITE_USE_MOCK=true).");
+  }
   await delay();
   return structuredClone(MOCK_LISTS);
 }
 
 export async function getOwnerDashboardLists(ownerId) {
+  if (!USE_MOCK) {
+    throw new Error("Reálné API není implementováno. Zapněte mock (VITE_USE_MOCK=true).");
+  }
   await delay();
   return structuredClone(MOCK_LISTS).filter(
     (list) => list.ownerId === ownerId || list.members.some((m) => m.id === ownerId)
@@ -70,6 +83,9 @@ export async function getOwnerDashboardLists(ownerId) {
 }
 
 export async function getMemberDashboardLists(memberId) {
+  if (!USE_MOCK) {
+    throw new Error("Reálné API není implementováno. Zapněte mock (VITE_USE_MOCK=true).");
+  }
   await delay();
   return structuredClone(MOCK_LISTS).filter(
     (list) => list.ownerId !== memberId && list.members.some((m) => m.id === memberId)
@@ -77,6 +93,9 @@ export async function getMemberDashboardLists(memberId) {
 }
 
 export async function getListDetail(listId) {
+  if (!USE_MOCK) {
+    throw new Error("Reálné API není implementováno. Zapněte mock (VITE_USE_MOCK=true).");
+  }
   await delay();
   const list = structuredClone(MOCK_LISTS.find((l) => l.id === listId));
   if (!list) {

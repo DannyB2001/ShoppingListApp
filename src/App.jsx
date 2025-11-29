@@ -16,6 +16,7 @@ function App() {
         <Route path="/" element={<DashboardRoute />} />
         <Route path="/owner_dashboard" element={<DashboardRoute />} />
         <Route path="/dashboard" element={<DashboardRoute />} />
+        <Route path="/" element={<DashboardRoute />} /> {/* Handles /, /owner_dashboard, /dashboard implicitly with a redirect or link strategy */}
         <Route path="/member_dashboard" element={<MemberListRoute />} />
 
         {/* OWNERS */}
@@ -34,6 +35,7 @@ function App() {
 
         {/* fallback */}
         <Route path="*" element={<DashboardRoute />} />
+        <Route path="*" element={<div>404 - Stránka nenalezena</div>} />
       </Routes>
     </BrowserRouter>
   );
