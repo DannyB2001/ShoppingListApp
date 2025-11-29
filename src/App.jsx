@@ -5,12 +5,17 @@ import OwnerListRoute from "./routes/OwnerListRoute.jsx";
 import ShoppingListDetailRoute from "./routes/ShoppingListDetailRoute.jsx";
 import MemberListRoute from "./routes/MemberListRoute.jsx";
 import MemberListDetailRoute from "./routes/MemberListDetailRoute.jsx";
+import DashboardRoute from "./routes/DashboardRoute.jsx";
 import "./App.css";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* DASHBOARD */}
+        <Route path="/" element={<DashboardRoute />} />
+        <Route path="/dashboard" element={<DashboardRoute />} />
+
         {/* OWNERS */}
         <Route path="/owner_list" element={<OwnerListRoute />} />
         <Route
@@ -26,7 +31,7 @@ function App() {
         />
 
         {/* fallback */}
-        <Route path="*" element={<OwnerListRoute />} />
+        <Route path="*" element={<DashboardRoute />} />
       </Routes>
     </BrowserRouter>
   );
