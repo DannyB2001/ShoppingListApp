@@ -5,10 +5,16 @@ import { getMemberDashboardLists } from "../services/listService";
 
 function MemberListRoute() {
   const navigate = useNavigate();
-  const identity = { id: "user-2", name: "Alice" };
+  const identity = { id: "user-1", name: "Daniel Novák" };
 
   const [lists, setLists] = useState([]);
   const [loadState, setLoadState] = useState({ status: "pending", error: null });
+
+  const shapeList = (list) => ({
+    ...list,
+    itemsCount: list.items?.length ?? 0,
+    unresolvedCount: list.items?.filter((item) => !item.isResolved).length ?? 0,
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -17,7 +23,7 @@ function MemberListRoute() {
       try {
         const response = await getMemberDashboardLists(identity.id);
         if (!cancelled) {
-          setLists(response);
+          setLists(response.map(shapeList));
           setLoadState({ status: "ready", error: null });
         }
       } catch (error) {
@@ -88,12 +94,12 @@ function MemberListRoute() {
                 <div className="list-card-row">
                   <h3>{list.name}</h3>
                 </div>
-                <div className="list-card-body">
-                  <div className="list-card-row">
-                    <span className="row-label-muted">
-                      {list.members.length} členů
-                    </span>
-                  </div>
+          <div className="list-card-body">
+            <div className="list-card-row">
+              <span className="row-label-muted">
+                {list.members.length} členů, {list.unresolvedCount ?? 0} nevyřešených / {list.itemsCount ?? 0} položek
+              </span>
+            </div>
                   <div className="list-card-row">
                     <Link
                       className="btn btn-primary"

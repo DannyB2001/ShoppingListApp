@@ -61,7 +61,7 @@ export const mockServer = {
   async call(endpoint, dtoIn = {}) {
     const handler = routes[endpoint];
     if (!handler) {
-      throw new Error(`Unknown endpoint "${endpoint}"`);
+      throw new Error(`Neznámý endpoint "${endpoint}"`);
     }
     await delay();
     return handler(dtoIn);

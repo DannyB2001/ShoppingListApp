@@ -1,7 +1,15 @@
 // src/routes/DashboardRoute.jsx
 import React, { useMemo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { getOwnerDashboardLists } from "../services/listService";
+import {
+  getOwnerDashboardLists,
+  createList,
+  setListArchived,
+  deleteList,
+  removeMemberFromList,
+  addMemberToList,
+  getAllLists,
+} from "../services/listService";
 
 const IDENTITY = { id: "user-1", name: "Daniel" };
 
@@ -9,6 +17,14 @@ function DashboardRoute() {
   const [lists, setLists] = useState([]);
   const [loadState, setLoadState] = useState({ status: "pending", error: null });
   const [showArchived, setShowArchived] = useState(false);
+  const [rejoinTarget, setRejoinTarget] = useState(null);
+
+  const shapeList = (list) => ({
+    ...list,
+    itemsCount: list.items?.length ?? 0,
+    unresolvedCount: list.items?.filter((item) => !item.isResolved).length ?? 0,
+    ownerName: list.members?.find((m) => m.id === list.ownerId)?.name ?? list.ownerId ?? "Vlastník",
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -17,13 +33,7 @@ function DashboardRoute() {
       try {
         const response = await getOwnerDashboardLists(IDENTITY.id);
         if (!cancelled) {
-          const withCounts = response.map((list) => ({
-            ...list,
-            itemsCount: list.items?.length ?? 0,
-            unresolvedCount: list.items?.filter((item) => !item.isResolved).length ?? 0,
-            ownerName:
-              list.members.find((m) => m.id === list.ownerId)?.name ?? list.ownerId ?? "Vlastník",
-          }));
+          const withCounts = response.map(shapeList);
           setLists(withCounts);
           setLoadState({ status: "ready", error: null });
         }
@@ -34,6 +44,29 @@ function DashboardRoute() {
       }
     }
     load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadRejoin() {
+      try {
+        const all = await getAllLists();
+        if (cancelled) return;
+        const candidate = all.find(
+          (list) =>
+            list.ownerId !== IDENTITY.id &&
+            !list.isArchived &&
+            !list.members.some((m) => m.id === IDENTITY.id)
+        );
+        if (candidate) setRejoinTarget(shapeList(candidate));
+      } catch (error) {
+        // swallow: optional helper for testing
+      }
+    }
+    loadRejoin();
     return () => {
       cancelled = true;
     };
@@ -63,50 +96,74 @@ function DashboardRoute() {
     const name = window.prompt("Zadej název nového seznamu");
     const trimmed = name?.trim();
     if (!trimmed) return;
-    setLists((prev) => [
-      {
-        id: `list-${Date.now()}`,
-        name: trimmed,
-        ownerId: IDENTITY.id,
-        ownerName: IDENTITY.name,
-        members: [
-          { id: IDENTITY.id, name: IDENTITY.name, isOwner: true },
-        ],
-        items: [],
-        itemsCount: 0,
-        unresolvedCount: 0,
-        isArchived: false,
-      },
-      ...prev,
-    ]);
+    createList({
+      id: `list-${Date.now()}`,
+      name: trimmed,
+      ownerId: IDENTITY.id,
+      members: [{ id: IDENTITY.id, name: IDENTITY.name, isOwner: true }],
+      items: [],
+      isArchived: false,
+    })
+      .then((created) => {
+        setLists((prev) => [
+          shapeList(created),
+          ...prev,
+        ]);
+      })
+      .catch(() => alert("Vytvoření seznamu selhalo."));
   }
 
   function handleArchive(listId) {
-    setLists((prev) =>
-      prev.map((list) => (list.id === listId ? { ...list, isArchived: true } : list))
-    );
+    setListArchived({ id: listId, isArchived: true })
+      .then((updated) => {
+        setLists((prev) =>
+          prev.map((list) => (list.id === listId ? shapeList(updated) : list))
+        );
+      })
+      .catch(() => alert("Archivace se nezdařila."));
   }
 
   function handleRestore(listId) {
-    setLists((prev) =>
-      prev.map((list) => (list.id === listId ? { ...list, isArchived: false } : list))
-    );
+    setListArchived({ id: listId, isArchived: false })
+      .then((updated) => {
+        setLists((prev) =>
+          prev.map((list) => (list.id === listId ? shapeList(updated) : list))
+        );
+      })
+      .catch(() => alert("Obnovení se nezdařilo."));
   }
 
   function handleDelete(listId) {
     const confirmed = window.confirm("Opravdu smazat tento seznam?");
     if (!confirmed) return;
-    setLists((prev) => prev.filter((list) => list.id !== listId));
+    deleteList(listId)
+      .then(() => {
+        setLists((prev) => prev.filter((list) => list.id !== listId));
+      })
+      .catch(() => alert("Smazání se nezdařilo."));
   }
 
   function handleLeave(listId) {
-    setLists((prev) =>
-      prev.map((list) =>
-        list.id === listId
-          ? { ...list, members: list.members.filter((member) => member.id !== IDENTITY.id) }
-          : list
-      )
-    );
+    removeMemberFromList({ id: listId, memberId: IDENTITY.id })
+      .then((updated) => {
+        setLists((prev) =>
+          prev.map((list) => (list.id === listId ? shapeList(updated) : list))
+        );
+      })
+      .catch(() => alert("Nepodařilo se opustit seznam."));
+  }
+
+  function handleRejoin(listId) {
+    addMemberToList({ id: listId, memberId: IDENTITY.id, isOwner: false })
+      .then((updated) => {
+        setLists((prev) =>
+          prev.some((list) => list.id === updated.id)
+            ? prev.map((list) => (list.id === updated.id ? shapeList(updated) : list))
+            : [...prev, shapeList(updated)]
+        );
+        setRejoinTarget(null);
+      })
+      .catch(() => alert("Nepodařilo se znovu připojit k seznamu."));
   }
 
   function renderListRow(list, isOwner) {
@@ -153,11 +210,7 @@ function DashboardRoute() {
                     Smazat
                   </button>
                 </>
-              ) : (
-                <button type="button" className="btn btn-ghost" onClick={() => handleLeave(list.id)}>
-                  Opustit
-                </button>
-              )}
+              ) : null}
             </div>
           </div>
         </article>
@@ -238,7 +291,18 @@ function DashboardRoute() {
             <p className="row-label-muted">{loadState.error}</p>
           )}
           {!invitedLists.length && loadState.status === "ready" && (
-            <p className="row-label-muted">Momentálně nejsi členem žádného seznamu.</p>
+            <div className="list-card-row">
+              <p className="row-label-muted">Momentálně nejsi členem žádného seznamu.</p>
+              {rejoinTarget && (
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => handleRejoin(rejoinTarget.id)}
+                >
+                  Znovu se připojit k „{rejoinTarget.name}“
+                </button>
+              )}
+            </div>
           )}
 
           <div className="dashboard-grid">

@@ -12,6 +12,7 @@ function ShoppingListDetail({
   identity,
   showUnresolvedOnly,
   mode,
+  errorMessage,
   onRenameList,
   onAddMember,
   onRemoveMember,
@@ -43,6 +44,12 @@ function ShoppingListDetail({
             />
           </div>
         </div>
+
+        {errorMessage && (
+          <div className="alert alert-error" role="alert">
+            {errorMessage}
+          </div>
+        )}
 
         <div className="detail-layout">
           <div className="detail-column detail-column--left">

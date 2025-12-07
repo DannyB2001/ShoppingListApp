@@ -1,20 +1,25 @@
 // src/routes/MemberListDetailRoute.jsx
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import {
-  INITIAL_SHOPPING_LIST,
-  INITIAL_MEMBERS,
-  INITIAL_ITEMS,
-} from "../data";
+import { INITIAL_MEMBERS } from "../data";
 import ShoppingListDetail from "./components/ShoppingListDetail";
-import { getListDetail } from "../services/listService";
+import {
+  getListDetail,
+  updateListName,
+  addMemberToList,
+  createMember,
+  removeMemberFromList,
+  addItemToList,
+  updateItemInList,
+  removeItemFromList,
+} from "../services/listService";
 
 function MemberListDetailRoute() {
   const { listId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
 
-  const identity = { id: "user-2", name: "Alice" };
+  const identity = { id: "user-1", name: "Daniel Novák" };
 
   const passedList = location.state?.list;
 
@@ -41,6 +46,13 @@ function MemberListDetailRoute() {
   const [items, setItems] = useState([]);
   const [showUnresolvedOnly, setShowUnresolvedOnly] = useState(false);
   const [loadState, setLoadState] = useState({ status: "pending", error: null });
+  const [actionError, setActionError] = useState(null);
+
+  function applyListState(list) {
+    setShoppingList(list);
+    setMembers(normalizeMembers(list.members ?? []));
+    setItems(list.items ?? []);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -48,17 +60,13 @@ function MemberListDetailRoute() {
       setLoadState({ status: "pending", error: null });
       try {
         if (passedList) {
-          setShoppingList(passedList);
-          setMembers(normalizeMembers(passedList.members ?? []));
-          setItems(passedList.items ?? []);
+          applyListState(passedList);
           setLoadState({ status: "ready", error: null });
           return;
         }
         const fromService = await getListDetail(listId);
         if (!cancelled) {
-          setShoppingList(fromService);
-          setMembers(normalizeMembers(fromService.members));
-          setItems(fromService.items ?? INITIAL_ITEMS);
+          applyListState(fromService);
           setLoadState({ status: "ready", error: null });
         }
       } catch (error) {
@@ -101,56 +109,100 @@ function MemberListDetailRoute() {
   }
 
   function handleRenameList(newName) {
-    setShoppingList((prev) => ({ ...prev, name: newName }));
+    const trimmed = newName.trim();
+    if (!trimmed) return;
+    setActionError(null);
+    (async () => {
+      try {
+        const updated = await updateListName({ id: listId, name: trimmed });
+        applyListState(updated);
+      } catch (error) {
+        setActionError("Přejmenování se nezdařilo.");
+      }
+    })();
   }
 
   function handleAddMember(memberIdentity) {
-    setMembers((prev) => {
-      if (prev.some((member) => member.id === memberIdentity.id)) return prev;
-      return [
-        ...prev,
-        {
-          id: memberIdentity.id,
-          name: memberIdentity.name,
-          isOwner: false,
-        },
-      ];
-    });
+    const memberId = memberIdentity.id || `user-${Date.now()}`;
+    const name = memberIdentity.name || memberId;
+    setActionError(null);
+    (async () => {
+      try {
+        try {
+          await createMember({ id: memberId, name });
+        } catch (error) {
+          // pokud už existuje, pokračujeme dál
+        }
+        const updated = await addMemberToList({ id: listId, memberId, isOwner: false });
+        applyListState(updated);
+      } catch (error) {
+        setActionError("Přidání člena se nezdařilo.");
+      }
+    })();
   }
 
   function handleRemoveMember(memberId) {
-    setMembers((prev) => prev.filter((member) => member.id !== memberId));
+    setActionError(null);
+    (async () => {
+      try {
+        const updated = await removeMemberFromList({ id: listId, memberId });
+        applyListState(updated);
+      } catch (error) {
+        setActionError("Odebrání člena se nezdařilo.");
+      }
+    })();
   }
 
   function handleAddItem(itemName) {
     const trimmed = itemName.trim();
     if (!trimmed) return;
-    setItems((prev) => [
-      ...prev,
-      {
-        id: `item-${Date.now()}`,
-        name: trimmed,
-        isResolved: false,
-      },
-    ]);
+    setActionError(null);
+    (async () => {
+      try {
+        const updated = await addItemToList({ id: listId, name: trimmed });
+        applyListState(updated);
+      } catch (error) {
+        setActionError("Přidání položky se nezdařilo.");
+      }
+    })();
   }
 
   function handleEditItem(itemId, newName) {
     const trimmed = newName.trim();
     if (!trimmed) return;
-    setItems((prev) =>
-      prev.map((item) => (item.id === itemId ? { ...item, name: trimmed } : item))
-    );
+    setActionError(null);
+    (async () => {
+      try {
+        const updated = await updateItemInList({ id: listId, itemId, name: trimmed });
+        applyListState(updated);
+      } catch (error) {
+        setActionError("Úprava položky se nezdařila.");
+      }
+    })();
   }
 
   function handleDeleteItem(itemId) {
-    setItems((prev) => prev.filter((item) => item.id !== itemId));
+    setActionError(null);
+    (async () => {
+      try {
+        const updated = await removeItemFromList({ id: listId, itemId });
+        applyListState(updated);
+      } catch (error) {
+        setActionError("Smazání položky se nezdařilo.");
+      }
+    })();
   }
 
   function handleToggleItem(itemId, isResolved) {
-    setItems((prev) =>
-      prev.map((item) => (item.id === itemId ? { ...item, isResolved } : item))
-    );
+    setActionError(null);
+    (async () => {
+      try {
+        const updated = await updateItemInList({ id: listId, itemId, isResolved });
+        applyListState(updated);
+      } catch (error) {
+        setActionError("Aktualizace položky se nezdařila.");
+      }
+    })();
   }
 
   function handleToggleFilter() {
@@ -166,8 +218,15 @@ function MemberListDetailRoute() {
   }
 
   function handleLeaveList() {
-    setMembers((prev) => prev.filter((member) => member.id !== identity.id));
-    navigate("/member_dashboard");
+    setActionError(null);
+    (async () => {
+      try {
+        await removeMemberFromList({ id: listId, memberId: identity.id });
+        navigate("/member_dashboard");
+      } catch (error) {
+        setActionError("Odebrání ze seznamu se nezdařilo.");
+      }
+    })();
   }
 
   return (
@@ -189,6 +248,7 @@ function MemberListDetailRoute() {
       onShareList={handleShareList}
       onBack={handleBack}
       onLeaveList={handleLeaveList}
+      errorMessage={actionError}
     />
   );
 }

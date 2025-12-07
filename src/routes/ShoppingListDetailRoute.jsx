@@ -1,13 +1,18 @@
 // src/routes/ShoppingListDetailRoute.jsx
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import {
-  INITIAL_SHOPPING_LIST,
-  INITIAL_MEMBERS,
-  INITIAL_ITEMS,
-} from "../data";
+import { INITIAL_MEMBERS } from "../data";
 import ShoppingListDetail from "./components/ShoppingListDetail.jsx";
-import { getListDetail } from "../services/listService";
+import {
+  getListDetail,
+  updateListName,
+  addMemberToList,
+  createMember,
+  removeMemberFromList,
+  addItemToList,
+  updateItemInList,
+  removeItemFromList,
+} from "../services/listService";
 
 function ShoppingListDetailRoute() {
   const { listId } = useParams();
@@ -40,7 +45,13 @@ function ShoppingListDetailRoute() {
   const [showUnresolvedOnly, setShowUnresolvedOnly] = useState(false);
   const [loadState, setLoadState] = useState({ status: "pending", error: null });
 
-  const identity = { id: "user-1", name: "Daniel Brož" };
+  const identity = { id: "user-1", name: "Daniel Novák" };
+
+  function applyListState(list) {
+    setShoppingList(list);
+    setMembers(normalizeMembers(list.members ?? []));
+    setItems(list.items ?? []);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -48,17 +59,13 @@ function ShoppingListDetailRoute() {
       setLoadState({ status: "pending", error: null });
       try {
         if (passedList) {
-          setShoppingList(passedList);
-          setMembers(normalizeMembers(passedList.members ?? []));
-          setItems(passedList.items ?? []);
+          applyListState(passedList);
           setLoadState({ status: "ready", error: null });
           return;
         }
         const fromService = await getListDetail(listId);
         if (!cancelled) {
-          setShoppingList(fromService);
-          setMembers(normalizeMembers(fromService.members));
-          setItems(fromService.items ?? INITIAL_ITEMS);
+          applyListState(fromService);
           setLoadState({ status: "ready", error: null });
         }
       } catch (error) {
@@ -101,56 +108,55 @@ function ShoppingListDetailRoute() {
   }
 
   function handleRenameList(newName) {
-    setShoppingList((prev) => ({ ...prev, name: newName }));
+    const trimmed = newName.trim();
+    if (!trimmed) return;
+    updateListName({ id: listId, name: trimmed })
+      .then((updated) => applyListState(updated))
+      .catch(() => alert("Přejmenování se nezdařilo."));
   }
 
   function handleAddMember(memberIdentity) {
-    setMembers((prev) => {
-      if (prev.some((member) => member.id === memberIdentity.id)) return prev;
-      return [
-        ...prev,
-        {
-          id: memberIdentity.id,
-          name: memberIdentity.name,
-          isOwner: false,
-        },
-      ];
-    });
+    const memberId = memberIdentity.id || `user-${Date.now()}`;
+    const name = memberIdentity.name || memberId;
+    createMember({ id: memberId, name })
+      .catch(() => Promise.resolve())
+      .then(() => addMemberToList({ id: listId, memberId, isOwner: false }))
+      .then((updated) => applyListState(updated))
+      .catch(() => alert("Přidání člena se nezdařilo."));
   }
 
   function handleRemoveMember(memberId) {
-    setMembers((prev) => prev.filter((member) => member.id !== memberId));
+    removeMemberFromList({ id: listId, memberId })
+      .then((updated) => applyListState(updated))
+      .catch(() => alert("Odebrání člena se nezdařilo."));
   }
 
   function handleAddItem(itemName) {
     const trimmed = itemName.trim();
     if (!trimmed) return;
-    setItems((prev) => [
-      ...prev,
-      {
-        id: `item-${Date.now()}`,
-        name: trimmed,
-        isResolved: false,
-      },
-    ]);
+    addItemToList({ id: listId, name: trimmed })
+      .then((updated) => applyListState(updated))
+      .catch(() => alert("Přidání položky se nezdařilo."));
   }
 
   function handleEditItem(itemId, newName) {
     const trimmed = newName.trim();
     if (!trimmed) return;
-    setItems((prev) =>
-      prev.map((item) => (item.id === itemId ? { ...item, name: trimmed } : item))
-    );
+    updateItemInList({ id: listId, itemId, name: trimmed })
+      .then((updated) => applyListState(updated))
+      .catch(() => alert("Úprava položky se nezdařila."));
   }
 
   function handleDeleteItem(itemId) {
-    setItems((prev) => prev.filter((item) => item.id !== itemId));
+    removeItemFromList({ id: listId, itemId })
+      .then((updated) => applyListState(updated))
+      .catch(() => alert("Smazání položky se nezdařilo."));
   }
 
   function handleToggleItem(itemId, isResolved) {
-    setItems((prev) =>
-      prev.map((item) => (item.id === itemId ? { ...item, isResolved } : item))
-    );
+    updateItemInList({ id: listId, itemId, isResolved })
+      .then((updated) => applyListState(updated))
+      .catch(() => alert("Aktualizace položky se nezdařila."));
   }
 
   function handleToggleFilter() {

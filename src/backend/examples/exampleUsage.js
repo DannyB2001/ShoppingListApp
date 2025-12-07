@@ -22,10 +22,10 @@ export async function loadMemberDashboard(memberId) {
 }
 
 export async function createListWithInitialItem() {
-  const createDtoIn = { id: "list-temp", name: "Quick Run", ownerId: "user-1" };
+  const createDtoIn = { id: "list-temp", name: "Rychlý nákup", ownerId: "user-1" };
   const created = await createShoppingList(createDtoIn);
   const newListId = created.data.shoppingList.id;
-  const addItemDtoIn = { id: newListId, name: "Apples" };
+  const addItemDtoIn = { id: newListId, name: "Jablka" };
   await addItemToShoppingList(addItemDtoIn);
   const getDtoIn = { id: newListId };
   const listDetail = await getShoppingList(getDtoIn);

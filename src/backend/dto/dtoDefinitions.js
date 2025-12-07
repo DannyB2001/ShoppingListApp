@@ -24,7 +24,7 @@ export const getShoppingListDtoOut = {
 
 export const createShoppingListDtoIn = {
   id: "list-99",
-  name: "New Shopping List",
+  name: "Nový nákupní seznam",
   ownerId: "user-1",
   members: [],
   items: [],
@@ -40,7 +40,7 @@ export const createShoppingListDtoOut = {
 
 export const updateShoppingListDtoIn = {
   id: "list-1",
-  name: "Updated List Name",
+  name: "Aktualizovaný název seznamu",
   isArchived: false,
   ownerId: "user-1",
 };
@@ -77,7 +77,7 @@ export const archiveShoppingListDtoOut = {
 export const addItemToShoppingListDtoIn = {
   id: "list-1",
   itemId: "item-100",
-  name: "Tomatoes",
+  name: "Rajčata",
 };
 
 export const addItemToShoppingListDtoOut = {
@@ -91,7 +91,7 @@ export const addItemToShoppingListDtoOut = {
 export const updateItemInShoppingListDtoIn = {
   id: "list-1",
   itemId: "item-1",
-  name: "Whole Milk",
+  name: "Plnotučné mléko",
   isResolved: true,
 };
 
@@ -180,8 +180,8 @@ export const getOwnerDtoOut = {
 
 export const createOwnerDtoIn = {
   id: "user-9",
-  name: "Owner Name",
-  email: "owner@example.com",
+  name: "Jméno vlastníka",
+  email: "vlastnik@priklad.cz",
 };
 
 export const createOwnerDtoOut = {
@@ -193,8 +193,8 @@ export const createOwnerDtoOut = {
 
 export const updateOwnerDtoIn = {
   id: "user-1",
-  name: "Updated Owner",
-  email: "updated@example.com",
+  name: "Aktualizovaný vlastník",
+  email: "aktualizovany@priklad.cz",
 };
 
 export const updateOwnerDtoOut = {
@@ -252,8 +252,8 @@ export const getMemberDtoOut = {
 
 export const createMemberDtoIn = {
   id: "user-10",
-  name: "Team Member",
-  email: "member@example.com",
+  name: "Člen týmu",
+  email: "clen@priklad.cz",
   isOwner: false,
 };
 
@@ -266,8 +266,8 @@ export const createMemberDtoOut = {
 
 export const updateMemberDtoIn = {
   id: "user-2",
-  name: "Updated Member",
-  email: "updated-member@example.com",
+  name: "Aktualizovaný člen",
+  email: "aktualizovany-clen@priklad.cz",
   isOwner: false,
 };
 

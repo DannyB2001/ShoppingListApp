@@ -4,7 +4,7 @@ export function cloneDeep(value) {
 
 export function assertId(dtoIn, context) {
   if (!dtoIn || !dtoIn.id) {
-    throw new Error(`${context}: dtoIn.id is required`);
+    throw new Error(`${context}: dtoIn.id je povinné`);
   }
 }
 

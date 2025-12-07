@@ -10,7 +10,7 @@ export async function getOwner(dtoIn) {
   assertId(dtoIn, "owner/get");
   const owner = dataStore.owners.find((item) => item.id === dtoIn.id);
   if (!owner) {
-    throw new Error(`owner ${dtoIn.id} not found`);
+    throw new Error(`Vlastník ${dtoIn.id} nebyl nalezen`);
   }
   return buildDtoOut({ owner: cloneDeep(owner) });
 }
@@ -18,11 +18,11 @@ export async function getOwner(dtoIn) {
 export async function createOwner(dtoIn) {
   assertId(dtoIn, "owner/create");
   if (dataStore.owners.some((item) => item.id === dtoIn.id)) {
-    throw new Error(`owner ${dtoIn.id} already exists`);
+    throw new Error(`Vlastník ${dtoIn.id} již existuje`);
   }
   const newOwner = {
     id: dtoIn.id,
-    name: dtoIn.name ?? "New Owner",
+    name: dtoIn.name ?? "Nový vlastník",
     email: dtoIn.email ?? "",
   };
   dataStore.owners.push(newOwner);
@@ -39,7 +39,7 @@ export async function createOwner(dtoIn) {
 export async function updateOwner(dtoIn) {
   const owner = dataStore.owners.find((item) => item.id === dtoIn.id);
   if (!owner) {
-    throw new Error(`owner ${dtoIn.id} not found`);
+    throw new Error(`Vlastník ${dtoIn.id} nebyl nalezen`);
   }
   if (dtoIn.name) owner.name = dtoIn.name;
   if (dtoIn.email) owner.email = dtoIn.email;
@@ -60,7 +60,7 @@ export async function updateOwner(dtoIn) {
 export async function deleteOwner(dtoIn) {
   const owner = dataStore.owners.find((item) => item.id === dtoIn.id);
   if (!owner) {
-    throw new Error(`owner ${dtoIn.id} not found`);
+    throw new Error(`Vlastník ${dtoIn.id} nebyl nalezen`);
   }
   dataStore.owners = dataStore.owners.filter((item) => item.id !== dtoIn.id);
   dataStore.members = dataStore.members.filter((item) => item.id !== dtoIn.id);

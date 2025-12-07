@@ -1,7 +1,7 @@
 // src/routes/OwnerListRoute.jsx
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { INITIAL_ITEMS, INITIAL_MEMBERS, INITIAL_SHOPPING_LIST } from "../data";
+import { getOwnerDashboardLists, createList, updateListName, setListArchived } from "../services/listService";
 
 function ListCard({ list, onRename, children }) {
   const [editing, setEditing] = useState(false);
@@ -63,48 +63,124 @@ function ListCard({ list, onRename, children }) {
 
 function OwnerListRoute() {
   const navigate = useNavigate();
+  const identity = { id: "user-1", name: "Daniel Novák" };
+  const [loadState, setLoadState] = useState({ status: "pending", error: null });
 
-  const [lists, setLists] = useState([
-    {
-      ...INITIAL_SHOPPING_LIST,
-      isArchived: false,
-      itemsCount: INITIAL_ITEMS.length,
-      unresolvedCount: INITIAL_ITEMS.filter((item) => !item.isResolved).length,
-      members: INITIAL_MEMBERS,
-    },
-  ]);
+  function normalizeList(list) {
+    const items = list.items ?? [];
+    return {
+      ...list,
+      itemsCount: list.itemsCount ?? items.length,
+      unresolvedCount: list.unresolvedCount ?? items.filter((item) => !item.isResolved).length,
+      members: list.members ?? [],
+      isArchived: Boolean(list.isArchived),
+    };
+  }
+
+  const [lists, setLists] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setLoadState({ status: "pending", error: null });
+      try {
+        const fetched = await getOwnerDashboardLists(identity.id);
+        if (!cancelled) {
+          setLists(fetched.map(normalizeList));
+          setLoadState({ status: "ready", error: null });
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setLoadState({ status: "error", error: "Nepodařilo se načíst seznamy." });
+        }
+      }
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [identity.id]);
+
+  if (loadState.status === "pending") {
+    return (
+      <div className="page-root">
+        <div className="page-card">
+          <p className="row-label-muted">Načítám seznamy…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loadState.status === "error") {
+    return (
+      <div className="page-root">
+        <div className="page-card">
+          <p className="row-label-muted">{loadState.error}</p>
+          <button type="button" className="btn btn-primary" onClick={() => window.location.reload()}>
+            Zkusit znovu
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const activeLists = lists.filter((list) => !list.isArchived);
   const archivedLists = lists.filter((list) => list.isArchived);
 
-  function handleCreateList() {
-    alert("Vytvoření nového seznamu zatím není implementováno.");
+  async function handleCreateList() {
+    const name = window.prompt("Zadej název nového seznamu");
+    const trimmed = name?.trim();
+    if (!trimmed) return;
+    try {
+      const created = await createList({
+        id: `list-${Date.now()}`,
+        name: trimmed,
+        ownerId: identity.id,
+        members: [{ id: identity.id, name: identity.name, isOwner: true }],
+        items: [],
+        isArchived: false,
+      });
+      setLists((prev) => [normalizeList(created), ...prev]);
+    } catch (error) {
+      alert("Vytvoření seznamu selhalo.");
+    }
   }
 
   function handleGoHome() {
     navigate("/");
   }
 
-  function handleRename(listId, name) {
-    setLists((prev) =>
-      prev.map((list) => (list.id === listId ? { ...list, name } : list))
-    );
+  async function handleRename(listId, name) {
+    try {
+      const updated = await updateListName({ id: listId, name });
+      setLists((prev) =>
+        prev.map((list) => (list.id === listId ? normalizeList(updated) : list))
+      );
+    } catch (error) {
+      alert("Přejmenování selhalo.");
+    }
   }
 
-  function handleArchive(listId) {
-    setLists((prev) =>
-      prev.map((list) =>
-        list.id === listId ? { ...list, isArchived: true } : list
-      )
-    );
+  async function handleArchive(listId) {
+    try {
+      const updated = await setListArchived({ id: listId, isArchived: true });
+      setLists((prev) =>
+        prev.map((list) => (list.id === listId ? normalizeList(updated) : list))
+      );
+    } catch (error) {
+      alert("Archivace selhala.");
+    }
   }
 
-  function handleRestore(listId) {
-    setLists((prev) =>
-      prev.map((list) =>
-        list.id === listId ? { ...list, isArchived: false } : list
-      )
-    );
+  async function handleRestore(listId) {
+    try {
+      const updated = await setListArchived({ id: listId, isArchived: false });
+      setLists((prev) =>
+        prev.map((list) => (list.id === listId ? normalizeList(updated) : list))
+      );
+    } catch (error) {
+      alert("Obnovení selhalo.");
+    }
   }
 
   return (

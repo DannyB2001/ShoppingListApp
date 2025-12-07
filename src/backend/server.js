@@ -30,7 +30,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method !== "POST" || !req.url.startsWith("/api/")) {
-    send(res, 404, { status: "error", error: "Not found" });
+    send(res, 404, { status: "error", error: "Nenalezeno" });
     return;
   }
 
@@ -55,5 +55,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Mock backend server listening on http://localhost:${PORT}`);
+  console.log(`Mock backend naslouchá na http://localhost:${PORT}`);
 });

@@ -9,7 +9,7 @@ export async function getMember(dtoIn) {
   assertId(dtoIn, "member/get");
   const member = dataStore.members.find((item) => item.id === dtoIn.id);
   if (!member) {
-    throw new Error(`member ${dtoIn.id} not found`);
+    throw new Error(`Člen ${dtoIn.id} nebyl nalezen`);
   }
   return buildDtoOut({ member: cloneDeep(member) });
 }
@@ -17,11 +17,11 @@ export async function getMember(dtoIn) {
 export async function createMember(dtoIn) {
   assertId(dtoIn, "member/create");
   if (dataStore.members.some((item) => item.id === dtoIn.id)) {
-    throw new Error(`member ${dtoIn.id} already exists`);
+    throw new Error(`Člen ${dtoIn.id} již existuje`);
   }
   const newMember = {
     id: dtoIn.id,
-    name: dtoIn.name ?? "New Member",
+    name: dtoIn.name ?? "Nový člen",
     email: dtoIn.email ?? "",
     isOwner: Boolean(dtoIn.isOwner),
   };
@@ -32,7 +32,7 @@ export async function createMember(dtoIn) {
 export async function updateMember(dtoIn) {
   const member = dataStore.members.find((item) => item.id === dtoIn.id);
   if (!member) {
-    throw new Error(`member ${dtoIn.id} not found`);
+    throw new Error(`Člen ${dtoIn.id} nebyl nalezen`);
   }
   if (dtoIn.name) member.name = dtoIn.name;
   if (dtoIn.email) member.email = dtoIn.email;
@@ -54,7 +54,7 @@ export async function updateMember(dtoIn) {
 export async function deleteMember(dtoIn) {
   const member = dataStore.members.find((item) => item.id === dtoIn.id);
   if (!member) {
-    throw new Error(`member ${dtoIn.id} not found`);
+    throw new Error(`Člen ${dtoIn.id} nebyl nalezen`);
   }
   dataStore.members = dataStore.members.filter((item) => item.id !== dtoIn.id);
   dataStore.shoppingLists.forEach((list) => {

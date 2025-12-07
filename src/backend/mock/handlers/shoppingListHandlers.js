@@ -5,7 +5,7 @@ function findList(dtoIn) {
   assertId(dtoIn, "shoppingList/get");
   const list = dataStore.shoppingLists.find((item) => item.id === dtoIn.id);
   if (!list) {
-    throw new Error(`shoppingList ${dtoIn.id} not found`);
+    throw new Error(`Nákupní seznam ${dtoIn.id} nebyl nalezen`);
   }
   return list;
 }
@@ -29,14 +29,14 @@ export async function createShoppingList(dtoIn) {
   assertId(dtoIn, "shoppingList/create");
   const owner = dataStore.owners.find((user) => user.id === dtoIn.ownerId);
   if (!owner) {
-    throw new Error(`owner ${dtoIn.ownerId} not found`);
+    throw new Error(`Vlastník ${dtoIn.ownerId} nebyl nalezen`);
   }
   if (dataStore.shoppingLists.some((list) => list.id === dtoIn.id)) {
-    throw new Error(`shoppingList ${dtoIn.id} already exists`);
+    throw new Error(`Nákupní seznam ${dtoIn.id} již existuje`);
   }
   const newList = {
     id: dtoIn.id,
-    name: dtoIn.name ?? "New Shopping List",
+    name: dtoIn.name ?? "Nový nákupní seznam",
     ownerId: dtoIn.ownerId,
     items: dtoIn.items ? cloneDeep(dtoIn.items) : [],
     members:
@@ -80,7 +80,7 @@ export async function archiveShoppingList(dtoIn) {
 export async function addItemToShoppingList(dtoIn) {
   const list = findList(dtoIn);
   const itemId = dtoIn.itemId ?? `item-${Date.now()}`;
-  const newItem = { id: itemId, name: dtoIn.name ?? "New Item", isResolved: false };
+  const newItem = { id: itemId, name: dtoIn.name ?? "Nová položka", isResolved: false };
   list.items.push(newItem);
   return buildDtoOut({ shoppingList: cloneDeep(list), item: cloneDeep(newItem) });
 }
@@ -89,7 +89,7 @@ export async function updateItemInShoppingList(dtoIn) {
   const list = findList(dtoIn);
   const item = list.items.find((entry) => entry.id === dtoIn.itemId);
   if (!item) {
-    throw new Error(`item ${dtoIn.itemId} not found in list ${dtoIn.id}`);
+    throw new Error(`Položka ${dtoIn.itemId} nebyla v seznamu ${dtoIn.id} nalezena`);
   }
   if (dtoIn.name) item.name = dtoIn.name;
   if (typeof dtoIn.isResolved === "boolean") item.isResolved = dtoIn.isResolved;
@@ -101,7 +101,7 @@ export async function removeItemFromShoppingList(dtoIn) {
   const exists = list.items.some((entry) => entry.id === dtoIn.itemId);
   list.items = list.items.filter((entry) => entry.id !== dtoIn.itemId);
   if (!exists) {
-    throw new Error(`item ${dtoIn.itemId} not found in list ${dtoIn.id}`);
+    throw new Error(`Položka ${dtoIn.itemId} nebyla v seznamu ${dtoIn.id} nalezena`);
   }
   return buildDtoOut({ shoppingList: cloneDeep(list), removedItemId: dtoIn.itemId });
 }
@@ -110,7 +110,7 @@ export async function toggleItemResolution(dtoIn) {
   const list = findList(dtoIn);
   const item = list.items.find((entry) => entry.id === dtoIn.itemId);
   if (!item) {
-    throw new Error(`item ${dtoIn.itemId} not found in list ${dtoIn.id}`);
+    throw new Error(`Položka ${dtoIn.itemId} nebyla v seznamu ${dtoIn.id} nalezena`);
   }
   item.isResolved = !item.isResolved;
   return buildDtoOut({ shoppingList: cloneDeep(list), item: cloneDeep(item) });
@@ -120,7 +120,7 @@ export async function assignMember(dtoIn) {
   const list = findList(dtoIn);
   const member = dataStore.members.find((m) => m.id === dtoIn.memberId);
   if (!member) {
-    throw new Error(`member ${dtoIn.memberId} not found`);
+    throw new Error(`Člen ${dtoIn.memberId} nebyl nalezen`);
   }
   const alreadyAssigned = list.members.some((m) => m.id === member.id);
   if (!alreadyAssigned) {
