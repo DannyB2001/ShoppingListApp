@@ -1,39 +1,44 @@
-# Shopping List App (HW-3)
+# Shopping List App (HW-4)
 
-Jednoduchá webová aplikace pro správu sdílených nákupních seznamů. Tato práce odpovídá zadání HW‑3: přehled (dashboard) pro vlastníka i pozvaného uživatele, detail seznamu se správou členů a položek, základní archivace, stavy pending/error/ready při načítání dat.
+Domácí úkol pro správu sdílených nákupních seznamů. Navazuje na HW3, ale přidává mock backend server, perzistenci operací a lokalizovaná data (čeština).
 
-## Stack
-- React 18
-- Vite (dev/build)
-- CSS (globální reset v `src/index.css`, layout v `src/App.css`)
+## Co přibylo oproti HW3
+- Mock backend server (`npm run backend`) s perzistencí v paměti a asynchronními handlery.
+- Všechna CRUD volání jdou přes backend (žádný localStorage fallback).
+- Lokalizovaná mock data: čeští uživatelé, položky, chybové hlášky.
+- Přidán seznam „Oslava“ s uživatelem Daniel jako pozvaným a Anežkou jako vlastníkem.
+- Rejoin workflow: lze opustit seznam a znovu se připojit přes backend.
+- Lepší obsluha chyb v detailech členů (zobrazují se hlášky).
 
-## Struktura a routy
-- `src/routes`
-  - `/owner_dashboard` (a `/`) – přehled všech seznamů, kde jsem vlastník; přepínání aktivní/archiv, mock vytvoření, otevření detailu.
-  - `/member_dashboard` – přehled seznamů, kam jsem pozvaný.
-  - `/owner_list/:listId` – detail seznamu pro vlastníka.
-  - `/member_list/:listId` – detail seznamu pro člena.
-- `src/routes/components` – sdílené UI (editable header, správa členů, seznam položek, toolbar).
-- `src/data.js` – mockovaná startovní data.
-- `src/services/listService.js` – mock „server“ s asynchronním načítáním.
+## Struktura
+- `src/backend/server.js` – HTTP mock backend (POST `/api/*`).
+- `src/backend/mock` – datastore a handlery pro seznamy, členy, vlastníky.
+- `src/services/listService.js` – frontend služby volající backend.
+- `src/routes/*` – stránky dashboardu a detailů (owner/member).
+- `src/routes/components/*` – UI komponenty detailu (členové, položky, hlavička).
 
-## Lokální spuštění
+## Spuštění
+1) Instalace závislostí
 ```bash
 npm install
-npm run dev   # http://localhost:5173
 ```
 
-## Build
+2) Mock backend (port 4000)
 ```bash
-npm run build
+npm run backend
 ```
-Výstup je v `dist` (pro náhled `npm run preview`).
 
-## Vlastnosti
-- Dashboard vlastníka: vytvořit mock seznam, archivace/obnovení, mazání s potvrzením, otevření detailu; zvláštní sekce pro seznamy, kde jsem pozvaný.
-- Detail seznamu: přejmenování, správa členů (přidat/odebrat/odejít), položky (přidat/mazat/editovat, filtrovat nevyřešené), „share“ akce jako alerty.
-- Pending/error/ready stavy při načítání dashboardu i detailů (mock API).
+3) Frontend (Vite dev server na 5173)
+```bash
+npm run dev
+```
 
-## Mock/real API přepínač
-- Mock je zapnutý ve výchozím stavu (`VITE_USE_MOCK=true`).
-- Pro vypnutí mocku a použití reálného API (zatím neimplementováno) nastav `VITE_USE_MOCK=false` v `.env` nebo prostředí. Při vypnutém mocku služby zatím vyhodí chybu, aby bylo zřejmé, že backend není připraven. 
+Otevři `http://localhost:5173/owner_dashboard` (root `/` přesměruje sem). Přehled pozvaných je na `/member_dashboard`.
+
+## Konfigurace
+- Backend URL: `VITE_API_URL` (výchozí `http://localhost:4000/api`).
+- Mock server je jediný backend (real API není potřeba).
+
+## Krátký průvodce
+- Vlastník: vytváří seznamy, archivuje/obnovuje, maže, spravuje členy/položky.
+- Člen: v detailu seznamu může přidávat/řídit položky a odejít ze seznamu; tlačítko „Znovu připojit“ se ukáže v přehledu jen po odchodu.
