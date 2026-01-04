@@ -1,12 +1,11 @@
 # Shopping List App (HW-4)
 
-Domácí úkol pro správu sdílených nákupních seznamů. Navazuje na HW3, ale přidává mock backend server, perzistenci operací a lokalizovaná data (čeština).
+Domácí úkol pro správu sdílených nákupních seznamů. Navazuje na HW3, ale přidává mock backend server, perzistenci operací a mock data.
 
 ## Co přibylo oproti HW3
 - Mock backend server (`npm run backend`) s perzistencí v paměti a asynchronními handlery.
 - Všechna CRUD volání jdou přes backend (žádný localStorage fallback).
 - Lokalizovaná mock data: čeští uživatelé, položky, chybové hlášky.
-- Přidán seznam „Oslava“ s uživatelem Daniel jako pozvaným a Anežkou jako vlastníkem.
 - Rejoin workflow: lze opustit seznam a znovu se připojit přes backend.
 - Lepší obsluha chyb v detailech členů (zobrazují se hlášky).
 
