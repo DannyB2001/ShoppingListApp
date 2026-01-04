@@ -1,23 +1,26 @@
 # Shopping List App (HW-4)
 
-Domácí úkol pro správu sdílených nákupních seznamů. Navazuje na HW3, ale přidává mock backend server, perzistenci operací a mock data.
+Shared shopping list app built with React. This HW4 version builds on HW3 and adds
+charts (Recharts), UI theming, and simple localization.
 
-## Co přibylo oproti HW3
-- Mock backend server (`npm run backend`) s perzistencí v paměti a asynchronními handlery.
-- Všechna CRUD volání jdou přes backend (žádný localStorage fallback).
-- Lokalizovaná mock data: čeští uživatelé, položky, chybové hlášky.
-- Rejoin workflow: lze opustit seznam a znovu se připojit přes backend.
-- Lepší obsluha chyb v detailech členů (zobrazují se hlášky).
+## New in HW4
+- Dashboard list overview chart (item counts per list).
+- Detail view pie chart (resolved vs unresolved items).
+- Light/Dark theme toggle.
+- CZ/EN UI language toggle (data stays unchanged).
+- Responsive layout for list/detail views.
 
-## Struktura
-- `src/backend/server.js` – HTTP mock backend (POST `/api/*`).
-- `src/backend/mock` – datastore a handlery pro seznamy, členy, vlastníky.
-- `src/services/listService.js` – frontend služby volající backend.
-- `src/routes/*` – stránky dashboardu a detailů (owner/member).
-- `src/routes/components/*` – UI komponenty detailu (členové, položky, hlavička).
+## Structure
+- `src/backend/server.js` - HTTP mock backend (POST `/api/*`).
+- `src/backend/mock` - datastore and handlers for lists, members, owners.
+- `src/services/listService.js` - frontend services calling the backend.
+- `src/routes/*` - dashboard and detail routes (owner/member).
+- `src/routes/components/*` - shared UI components (members, items, charts, toolbar).
+- `src/context/PreferencesContext.jsx` - theme + language state.
+- `src/i18n/translations.js` - UI strings for CZ/EN.
 
-## Spuštění
-1) Instalace závislostí
+## Run
+1) Install dependencies
 ```bash
 npm install
 ```
@@ -27,17 +30,18 @@ npm install
 npm run backend
 ```
 
-3) Frontend (Vite dev server na 5173)
+3) Frontend (Vite dev server on 5173)
 ```bash
 npm run dev
 ```
 
-Otevři `http://localhost:5173/owner_dashboard` (root `/` přesměruje sem). Přehled pozvaných je na `/member_dashboard`.
+Open `http://localhost:5173/owner_dashboard`. The member dashboard is at
+`/member_dashboard`.
 
-## Konfigurace
-- Backend URL: `VITE_API_URL` (výchozí `http://localhost:4000/api`).
-- Mock server je jediný backend (real API není potřeba).
+## Configuration
+- Backend URL: `VITE_API_URL` (default `http://localhost:4000/api`).
+- The mock server is the only backend used by the app.
 
-## Krátký průvodce
-- Vlastník: vytváří seznamy, archivuje/obnovuje, maže, spravuje členy/položky.
-- Člen: v detailu seznamu může přidávat/řídit položky a odejít ze seznamu; tlačítko „Znovu připojit“ se ukáže v přehledu jen po odchodu.
+## Quick guide
+- Owner: creates lists, archives/restores, deletes, manages members/items.
+- Member: can manage items and leave a list from the detail view.
