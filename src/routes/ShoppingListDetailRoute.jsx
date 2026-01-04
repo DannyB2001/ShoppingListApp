@@ -13,8 +13,10 @@ import {
   updateItemInList,
   removeItemFromList,
 } from "../services/listService";
+import { usePreferences } from "../context/PreferencesContext";
 
 function ShoppingListDetailRoute() {
+  const { t } = usePreferences();
   const { listId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -34,7 +36,7 @@ function ShoppingListDetailRoute() {
     }
     return source.map((id, index) => ({
       id,
-      name: `Uživatel ${index + 1}`,
+      name: `User ${index + 1}`,
       isOwner: id === (passedList?.ownerId ?? "user-1"),
     }));
   }
@@ -45,7 +47,7 @@ function ShoppingListDetailRoute() {
   const [showUnresolvedOnly, setShowUnresolvedOnly] = useState(false);
   const [loadState, setLoadState] = useState({ status: "pending", error: null });
 
-  const identity = { id: "user-1", name: "Daniel Novák" };
+  const identity = { id: "user-1", name: "Daniel Novak" };
 
   function applyListState(list) {
     setShoppingList(list);
@@ -70,7 +72,7 @@ function ShoppingListDetailRoute() {
         }
       } catch (error) {
         if (!cancelled) {
-          setLoadState({ status: "error", error: "Nepodařilo se načíst detail seznamu." });
+          setLoadState({ status: "error", error: t("detail.loadError") });
         }
       }
     }
@@ -78,13 +80,13 @@ function ShoppingListDetailRoute() {
     return () => {
       cancelled = true;
     };
-  }, [listId, passedList]);
+  }, [listId, passedList, t]);
 
   if (loadState.status === "pending" || !shoppingList) {
     return (
       <div className="page-root">
         <div className="page-card">
-          <p className="row-label-muted">Načítám detail seznamu…</p>
+          <p className="row-label-muted">{t("detail.loading")}</p>
         </div>
       </div>
     );
@@ -95,12 +97,8 @@ function ShoppingListDetailRoute() {
       <div className="page-root">
         <div className="page-card">
           <p className="row-label-muted">{loadState.error}</p>
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={() => navigate("/owner_dashboard")}
-          >
-            Zpět na přehled
+          <button type="button" className="btn btn-primary" onClick={() => navigate("/owner_dashboard")}>
+            {t("common.backToOverview")}
           </button>
         </div>
       </div>
@@ -112,7 +110,7 @@ function ShoppingListDetailRoute() {
     if (!trimmed) return;
     updateListName({ id: listId, name: trimmed })
       .then((updated) => applyListState(updated))
-      .catch(() => alert("Přejmenování se nezdařilo."));
+      .catch(() => alert(t("detail.renameError")));
   }
 
   function handleAddMember(memberIdentity) {
@@ -122,13 +120,13 @@ function ShoppingListDetailRoute() {
       .catch(() => Promise.resolve())
       .then(() => addMemberToList({ id: listId, memberId, isOwner: false }))
       .then((updated) => applyListState(updated))
-      .catch(() => alert("Přidání člena se nezdařilo."));
+      .catch(() => alert(t("detail.addMemberError")));
   }
 
   function handleRemoveMember(memberId) {
     removeMemberFromList({ id: listId, memberId })
       .then((updated) => applyListState(updated))
-      .catch(() => alert("Odebrání člena se nezdařilo."));
+      .catch(() => alert(t("detail.removeMemberError")));
   }
 
   function handleAddItem(itemName) {
@@ -136,7 +134,7 @@ function ShoppingListDetailRoute() {
     if (!trimmed) return;
     addItemToList({ id: listId, name: trimmed })
       .then((updated) => applyListState(updated))
-      .catch(() => alert("Přidání položky se nezdařilo."));
+      .catch(() => alert(t("detail.addItemError")));
   }
 
   function handleEditItem(itemId, newName) {
@@ -144,19 +142,19 @@ function ShoppingListDetailRoute() {
     if (!trimmed) return;
     updateItemInList({ id: listId, itemId, name: trimmed })
       .then((updated) => applyListState(updated))
-      .catch(() => alert("Úprava položky se nezdařila."));
+      .catch(() => alert(t("detail.editItemError")));
   }
 
   function handleDeleteItem(itemId) {
     removeItemFromList({ id: listId, itemId })
       .then((updated) => applyListState(updated))
-      .catch(() => alert("Smazání položky se nezdařilo."));
+      .catch(() => alert(t("detail.deleteItemError")));
   }
 
   function handleToggleItem(itemId, isResolved) {
     updateItemInList({ id: listId, itemId, isResolved })
       .then((updated) => applyListState(updated))
-      .catch(() => alert("Aktualizace položky se nezdařila."));
+      .catch(() => alert(t("detail.updateItemError")));
   }
 
   function handleToggleFilter() {
@@ -164,7 +162,7 @@ function ShoppingListDetailRoute() {
   }
 
   function handleShareList() {
-    alert("Sdílení seznamu zatím není připraveno.");
+    alert(t("detail.shareUnavailableOwner"));
   }
 
   function handleBack() {

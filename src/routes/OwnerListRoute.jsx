@@ -1,9 +1,18 @@
 // src/routes/OwnerListRoute.jsx
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { getOwnerDashboardLists, createList, updateListName, setListArchived } from "../services/listService";
+import {
+  getOwnerDashboardLists,
+  createList,
+  updateListName,
+  setListArchived,
+} from "../services/listService";
+import AppToolbar from "./components/AppToolbar";
+import ListOverviewChart from "./components/ListOverviewChart";
+import { usePreferences } from "../context/PreferencesContext";
 
 function ListCard({ list, onRename, children }) {
+  const { t } = usePreferences();
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(list.name);
 
@@ -30,7 +39,7 @@ function ListCard({ list, onRename, children }) {
             autoFocus
           />
           <button type="submit" className="btn btn-primary btn-small">
-            Uložit
+            {t("common.save")}
           </button>
           <button
             type="button"
@@ -40,7 +49,7 @@ function ListCard({ list, onRename, children }) {
               setValue(list.name);
             }}
           >
-            Zrušit
+            {t("common.cancel")}
           </button>
         </form>
       ) : (
@@ -50,9 +59,9 @@ function ListCard({ list, onRename, children }) {
             type="button"
             className="icon-button"
             onClick={() => setEditing(true)}
-            aria-label="Přejmenovat seznam"
+            aria-label={t("ownerLists.renameAria")}
           >
-            Upravit
+            {t("common.edit")}
           </button>
         </div>
       )}
@@ -62,8 +71,9 @@ function ListCard({ list, onRename, children }) {
 }
 
 function OwnerListRoute() {
+  const { t } = usePreferences();
   const navigate = useNavigate();
-  const identity = { id: "user-1", name: "Daniel Novák" };
+  const identity = { id: "user-1", name: "Daniel Novak" };
   const [loadState, setLoadState] = useState({ status: "pending", error: null });
 
   function normalizeList(list) {
@@ -91,7 +101,7 @@ function OwnerListRoute() {
         }
       } catch (error) {
         if (!cancelled) {
-          setLoadState({ status: "error", error: "Nepodařilo se načíst seznamy." });
+          setLoadState({ status: "error", error: t("ownerLists.loadError") });
         }
       }
     }
@@ -99,13 +109,14 @@ function OwnerListRoute() {
     return () => {
       cancelled = true;
     };
-  }, [identity.id]);
+  }, [identity.id, t]);
 
   if (loadState.status === "pending") {
     return (
       <div className="page-root">
         <div className="page-card">
-          <p className="row-label-muted">Načítám seznamy…</p>
+          <AppToolbar />
+          <p className="row-label-muted">{t("dashboard.loading")}</p>
         </div>
       </div>
     );
@@ -115,9 +126,10 @@ function OwnerListRoute() {
     return (
       <div className="page-root">
         <div className="page-card">
+          <AppToolbar />
           <p className="row-label-muted">{loadState.error}</p>
           <button type="button" className="btn btn-primary" onClick={() => window.location.reload()}>
-            Zkusit znovu
+            {t("ownerLists.retry")}
           </button>
         </div>
       </div>
@@ -127,8 +139,17 @@ function OwnerListRoute() {
   const activeLists = lists.filter((list) => !list.isArchived);
   const archivedLists = lists.filter((list) => list.isArchived);
 
+  const chartData = useMemo(
+    () =>
+      activeLists.map((list) => ({
+        name: list.name,
+        itemsCount: list.itemsCount ?? 0,
+      })),
+    [activeLists]
+  );
+
   async function handleCreateList() {
-    const name = window.prompt("Zadej název nového seznamu");
+    const name = window.prompt(t("ownerLists.createPrompt"));
     const trimmed = name?.trim();
     if (!trimmed) return;
     try {
@@ -142,7 +163,7 @@ function OwnerListRoute() {
       });
       setLists((prev) => [normalizeList(created), ...prev]);
     } catch (error) {
-      alert("Vytvoření seznamu selhalo.");
+      alert(t("ownerLists.createError"));
     }
   }
 
@@ -157,7 +178,7 @@ function OwnerListRoute() {
         prev.map((list) => (list.id === listId ? normalizeList(updated) : list))
       );
     } catch (error) {
-      alert("Přejmenování selhalo.");
+      alert(t("ownerLists.renameError"));
     }
   }
 
@@ -168,7 +189,7 @@ function OwnerListRoute() {
         prev.map((list) => (list.id === listId ? normalizeList(updated) : list))
       );
     } catch (error) {
-      alert("Archivace selhala.");
+      alert(t("ownerLists.archiveError"));
     }
   }
 
@@ -179,63 +200,61 @@ function OwnerListRoute() {
         prev.map((list) => (list.id === listId ? normalizeList(updated) : list))
       );
     } catch (error) {
-      alert("Obnovení selhalo.");
+      alert(t("ownerLists.restoreError"));
     }
   }
 
   return (
     <div className="page-root">
       <div className="page-card">
+        <AppToolbar />
         <header className="detail-header">
           <div className="detail-title-block">
-            <h1 className="title-text">Moje nákupní seznamy</h1>
-            <p className="title-subtext">
-              Přehled všech nákupních seznamů, kde jsi vlastníkem.
-            </p>
+            <h1 className="title-text">{t("ownerLists.title")}</h1>
+            <p className="title-subtext">{t("ownerLists.subtitle")}</p>
           </div>
           <div className="dashboard-options-actions">
-            <button
-              type="button"
-              className="btn btn-ghost"
-              onClick={handleGoHome}
-            >
-              ← Hlavní stránka
+            <button type="button" className="btn btn-ghost" onClick={handleGoHome}>
+              {"<-"} {t("ownerLists.home")}
             </button>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={handleCreateList}
-            >
-              + Nový seznam
+            <button type="button" className="btn btn-primary" onClick={handleCreateList}>
+              + {t("ownerLists.newList")}
             </button>
           </div>
         </header>
 
+        <section className="panel chart-panel">
+          <div className="panel-header">
+            <div>
+              <div className="panel-eyebrow">{t("ownerLists.activeEyebrow")}</div>
+              <h2>{t("ownerLists.chartTitle")}</h2>
+            </div>
+          </div>
+          <ListOverviewChart data={chartData} />
+        </section>
+
         <section className="panel">
           <div className="panel-header">
             <div>
-              <div className="panel-eyebrow">Moje správa</div>
-              <h2>Aktivní seznamy</h2>
+              <div className="panel-eyebrow">{t("ownerLists.activeEyebrow")}</div>
+              <h2>{t("ownerLists.activeTitle")}</h2>
             </div>
-            <span className="row-label-muted">{activeLists.length} celkem</span>
+            <span className="row-label-muted">{t("common.total", { count: activeLists.length })}</span>
           </div>
 
           {!activeLists.length && (
-            <p className="row-label-muted">
-              Nemáte žádné aktivní nákupní seznamy.
-            </p>
+            <p className="row-label-muted">{t("ownerLists.activeEmpty")}</p>
           )}
 
           <div className="list-grid">
             {activeLists.map((list) => (
-              <ListCard
-                key={list.id}
-                list={list}
-                onRename={(name) => handleRename(list.id, name)}
-              >
+              <ListCard key={list.id} list={list} onRename={(name) => handleRename(list.id, name)}>
                 <div className="list-card-row">
                   <span className="row-label-muted">
-                    {list.unresolvedCount} nevyřešených / {list.itemsCount} položek
+                    {t("listCard.unresolvedSummary", {
+                      unresolved: list.unresolvedCount,
+                      total: list.itemsCount,
+                    })}
                   </span>
                 </div>
                 <div className="list-card-row">
@@ -246,14 +265,14 @@ function OwnerListRoute() {
                       navigate(`/owner_list/${list.id}`, { state: { list } })
                     }
                   >
-                    Otevřít
+                    {t("common.open")}
                   </button>
                   <button
                     type="button"
                     className="btn btn-ghost"
                     onClick={() => handleArchive(list.id)}
                   >
-                    Archivovat
+                    {t("common.archive")}
                   </button>
                 </div>
               </ListCard>
@@ -264,27 +283,21 @@ function OwnerListRoute() {
         <section className="panel">
           <div className="panel-header">
             <div>
-              <div className="panel-eyebrow">Historie</div>
-              <h2>Archivované seznamy</h2>
+              <div className="panel-eyebrow">{t("ownerLists.archiveEyebrow")}</div>
+              <h2>{t("ownerLists.archiveTitle")}</h2>
             </div>
-            <span className="row-label-muted">
-              {archivedLists.length} celkem
-            </span>
+            <span className="row-label-muted">{t("common.total", { count: archivedLists.length })}</span>
           </div>
 
           {!archivedLists.length && (
-            <p className="row-label-muted">Žádné seznamy v archivu.</p>
+            <p className="row-label-muted">{t("ownerLists.archiveEmpty")}</p>
           )}
 
           <div className="list-grid">
             {archivedLists.map((list) => (
-              <ListCard
-                key={list.id}
-                list={list}
-                onRename={(name) => handleRename(list.id, name)}
-              >
+              <ListCard key={list.id} list={list} onRename={(name) => handleRename(list.id, name)}>
                 <div className="list-card-row">
-                  <span className="row-label-muted">Archivováno</span>
+                  <span className="row-label-muted">{t("ownerLists.archivedLabel")}</span>
                 </div>
                 <div className="list-card-row">
                   <button
@@ -294,14 +307,14 @@ function OwnerListRoute() {
                       navigate(`/owner_list/${list.id}`, { state: { list } })
                     }
                   >
-                    Otevřít
+                    {t("common.open")}
                   </button>
                   <button
                     type="button"
                     className="btn btn-ghost"
                     onClick={() => handleRestore(list.id)}
                   >
-                    Obnovit
+                    {t("common.restore")}
                   </button>
                 </div>
               </ListCard>
@@ -311,7 +324,7 @@ function OwnerListRoute() {
 
         <footer className="detail-toolbar">
           <span className="row-label-muted">
-            Pohled člena najdeš na <Link to="/member_dashboard">/member_dashboard</Link>.
+            {t("ownerLists.memberFooter")} <Link to="/member_dashboard">/member_dashboard</Link>.
           </span>
         </footer>
       </div>

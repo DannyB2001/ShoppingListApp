@@ -6,14 +6,17 @@ import {
   createList,
   setListArchived,
   deleteList,
-  removeMemberFromList,
   addMemberToList,
   getAllLists,
 } from "../services/listService";
+import AppToolbar from "./components/AppToolbar";
+import ListOverviewChart from "./components/ListOverviewChart";
+import { usePreferences } from "../context/PreferencesContext";
 
 const IDENTITY = { id: "user-1", name: "Daniel" };
 
 function DashboardRoute() {
+  const { t } = usePreferences();
   const [lists, setLists] = useState([]);
   const [loadState, setLoadState] = useState({ status: "pending", error: null });
   const [showArchived, setShowArchived] = useState(false);
@@ -23,7 +26,10 @@ function DashboardRoute() {
     ...list,
     itemsCount: list.items?.length ?? 0,
     unresolvedCount: list.items?.filter((item) => !item.isResolved).length ?? 0,
-    ownerName: list.members?.find((m) => m.id === list.ownerId)?.name ?? list.ownerId ?? "Vlastník",
+    ownerName:
+      list.members?.find((member) => member.id === list.ownerId)?.name ??
+      list.ownerId ??
+      t("dashboard.ownerCardTitle"),
   });
 
   useEffect(() => {
@@ -39,7 +45,7 @@ function DashboardRoute() {
         }
       } catch (error) {
         if (!cancelled) {
-          setLoadState({ status: "error", error: "Nepodařilo se načíst seznamy." });
+          setLoadState({ status: "error", error: t("dashboard.loadError") });
         }
       }
     }
@@ -47,7 +53,7 @@ function DashboardRoute() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     let cancelled = false;
@@ -59,18 +65,18 @@ function DashboardRoute() {
           (list) =>
             list.ownerId !== IDENTITY.id &&
             !list.isArchived &&
-            !list.members.some((m) => m.id === IDENTITY.id)
+            !list.members.some((member) => member.id === IDENTITY.id)
         );
         if (candidate) setRejoinTarget(shapeList(candidate));
       } catch (error) {
-        // swallow: optional helper for testing
+        // optional helper for testing
       }
     }
     loadRejoin();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t]);
 
   const visibleLists = useMemo(
     () => lists.filter((list) => (showArchived ? list.isArchived : !list.isArchived)),
@@ -92,8 +98,17 @@ function DashboardRoute() {
     [visibleLists]
   );
 
+  const chartData = useMemo(
+    () =>
+      visibleLists.map((list) => ({
+        name: list.name,
+        itemsCount: list.itemsCount ?? 0,
+      })),
+    [visibleLists]
+  );
+
   function handleCreate() {
-    const name = window.prompt("Zadej název nového seznamu");
+    const name = window.prompt(t("dashboard.createPrompt"));
     const trimmed = name?.trim();
     if (!trimmed) return;
     createList({
@@ -105,12 +120,9 @@ function DashboardRoute() {
       isArchived: false,
     })
       .then((created) => {
-        setLists((prev) => [
-          shapeList(created),
-          ...prev,
-        ]);
+        setLists((prev) => [shapeList(created), ...prev]);
       })
-      .catch(() => alert("Vytvoření seznamu selhalo."));
+      .catch(() => alert(t("dashboard.createError")));
   }
 
   function handleArchive(listId) {
@@ -120,7 +132,7 @@ function DashboardRoute() {
           prev.map((list) => (list.id === listId ? shapeList(updated) : list))
         );
       })
-      .catch(() => alert("Archivace se nezdařila."));
+      .catch(() => alert(t("dashboard.archiveError")));
   }
 
   function handleRestore(listId) {
@@ -130,27 +142,17 @@ function DashboardRoute() {
           prev.map((list) => (list.id === listId ? shapeList(updated) : list))
         );
       })
-      .catch(() => alert("Obnovení se nezdařilo."));
+      .catch(() => alert(t("dashboard.restoreError")));
   }
 
   function handleDelete(listId) {
-    const confirmed = window.confirm("Opravdu smazat tento seznam?");
+    const confirmed = window.confirm(t("dashboard.deleteConfirm"));
     if (!confirmed) return;
     deleteList(listId)
       .then(() => {
         setLists((prev) => prev.filter((list) => list.id !== listId));
       })
-      .catch(() => alert("Smazání se nezdařilo."));
-  }
-
-  function handleLeave(listId) {
-    removeMemberFromList({ id: listId, memberId: IDENTITY.id })
-      .then((updated) => {
-        setLists((prev) =>
-          prev.map((list) => (list.id === listId ? shapeList(updated) : list))
-        );
-      })
-      .catch(() => alert("Nepodařilo se opustit seznam."));
+      .catch(() => alert(t("dashboard.deleteError")));
   }
 
   function handleRejoin(listId) {
@@ -163,7 +165,7 @@ function DashboardRoute() {
         );
         setRejoinTarget(null);
       })
-      .catch(() => alert("Nepodařilo se znovu připojit k seznamu."));
+      .catch(() => alert(t("dashboard.rejoinError")));
   }
 
   function renderListRow(list, isOwner) {
@@ -174,22 +176,23 @@ function DashboardRoute() {
         <article className="list-card">
           <div className="list-card-row">
             <h3>{list.name}</h3>
-            {list.isArchived && <span className="badge">Archiv</span>}
+            {list.isArchived && <span className="badge">{t("common.archived")}</span>}
           </div>
           <div className="list-card-body">
             <div className="list-card-row">
               <span className="row-label-muted">
-                {list.unresolvedCount} nevyřešených / {list.itemsCount} položek
+                {t("listCard.unresolvedSummary", {
+                  unresolved: list.unresolvedCount,
+                  total: list.itemsCount,
+                })}
               </span>
-              <span className="row-label-muted">{isOwner ? "Moje správa" : "Jsem člen"}</span>
+              <span className="row-label-muted">
+                {isOwner ? t("dashboard.ownerLabel") : t("dashboard.memberLabel")}
+              </span>
             </div>
             <div className="list-card-row">
-              <Link
-                className="btn btn-primary"
-                to={targetHref}
-                state={{ list }}
-              >
-                Otevřít
+              <Link className="btn btn-primary" to={targetHref} state={{ list }}>
+                {t("common.open")}
               </Link>
               {isOwner ? (
                 <>
@@ -200,14 +203,14 @@ function DashboardRoute() {
                       list.isArchived ? handleRestore(list.id) : handleArchive(list.id)
                     }
                   >
-                    {list.isArchived ? "Obnovit" : "Archivovat"}
+                    {list.isArchived ? t("common.restore") : t("common.archive")}
                   </button>
                   <button
                     type="button"
                     className="btn btn-danger"
                     onClick={() => handleDelete(list.id)}
                   >
-                    Smazat
+                    {t("common.delete")}
                   </button>
                 </>
               ) : null}
@@ -216,8 +219,10 @@ function DashboardRoute() {
         </article>
         <div className="list-card owner-card">
           <div className="list-card-row">
-            <h4 className="owner-card-title">Vlastník</h4>
-            <span className="row-label-muted">{list.members.length} členů</span>
+            <h4 className="owner-card-title">{t("dashboard.ownerCardTitle")}</h4>
+            <span className="row-label-muted">
+              {t("common.membersCount", { count: list.members.length })}
+            </span>
           </div>
           <div className="owner-card-name">{list.ownerName}</div>
         </div>
@@ -228,46 +233,57 @@ function DashboardRoute() {
   return (
     <div className="page-root">
       <div className="page-card">
+        <AppToolbar />
         <header className="detail-header">
           <div className="detail-title-block">
-            <h1 className="title-text">Přehled nákupních seznamů</h1>
-            <p className="title-subtext">Rozděleno podle role: vlastník nebo pozvaný člen.</p>
+            <h1 className="title-text">{t("dashboard.title")}</h1>
+            <p className="title-subtext">{t("dashboard.subtitle")}</p>
           </div>
         </header>
 
         <div className="dashboard-options">
-          <span className="row-label-muted">Možnosti</span>
+          <span className="row-label-muted">{t("dashboard.options")}</span>
           <div className="dashboard-options-actions">
             <button type="button" className="btn btn-primary" onClick={handleCreate}>
-              Vytvořit seznam
+              {t("dashboard.createList")}
             </button>
             <button
               type="button"
               className="btn btn-ghost"
               onClick={() => setShowArchived((prev) => !prev)}
             >
-              {showArchived ? "Zobrazit aktivní" : "Zobrazit archivované"}
+              {showArchived ? t("dashboard.showActive") : t("dashboard.showArchived")}
             </button>
           </div>
         </div>
 
+        <section className="panel chart-panel">
+          <div className="panel-header">
+            <div>
+              <div className="panel-eyebrow">{t("dashboard.ownerSectionEyebrow")}</div>
+              <h2>{t("dashboard.chartTitle")}</h2>
+            </div>
+          </div>
+          <ListOverviewChart data={chartData} />
+        </section>
+
         <section className="panel dashboard-panel">
           <div className="panel-header">
             <div>
-              <div className="panel-eyebrow">Moje seznamy</div>
-              <h2>Vlastním</h2>
+              <div className="panel-eyebrow">{t("dashboard.ownerSectionEyebrow")}</div>
+              <h2>{t("dashboard.ownerSectionTitle")}</h2>
             </div>
-            <span className="row-label-muted">{ownedLists.length} celkem</span>
+            <span className="row-label-muted">{t("common.total", { count: ownedLists.length })}</span>
           </div>
 
           {loadState.status === "pending" && (
-            <p className="row-label-muted">Načítám seznamy…</p>
+            <p className="row-label-muted">{t("dashboard.loading")}</p>
           )}
           {loadState.status === "error" && (
             <p className="row-label-muted">{loadState.error}</p>
           )}
           {!ownedLists.length && loadState.status === "ready" && (
-            <p className="row-label-muted">Žádné seznamy ve správě pro tento pohled.</p>
+            <p className="row-label-muted">{t("dashboard.emptyOwner")}</p>
           )}
 
           <div className="dashboard-grid">
@@ -278,28 +294,30 @@ function DashboardRoute() {
         <section className="panel dashboard-panel">
           <div className="panel-header">
             <div>
-              <div className="panel-eyebrow">Uživatel</div>
-              <h2>Jsem přizvaný</h2>
+              <div className="panel-eyebrow">{t("dashboard.memberSectionEyebrow")}</div>
+              <h2>{t("dashboard.memberSectionTitle")}</h2>
             </div>
-            <span className="row-label-muted">{invitedLists.length} celkem</span>
+            <span className="row-label-muted">
+              {t("common.total", { count: invitedLists.length })}
+            </span>
           </div>
 
           {loadState.status === "pending" && (
-            <p className="row-label-muted">Načítám seznamy…</p>
+            <p className="row-label-muted">{t("dashboard.loading")}</p>
           )}
           {loadState.status === "error" && (
             <p className="row-label-muted">{loadState.error}</p>
           )}
           {!invitedLists.length && loadState.status === "ready" && (
             <div className="list-card-row">
-              <p className="row-label-muted">Momentálně nejsi členem žádného seznamu.</p>
+              <p className="row-label-muted">{t("dashboard.emptyMember")}</p>
               {rejoinTarget && (
                 <button
                   type="button"
                   className="btn btn-secondary"
                   onClick={() => handleRejoin(rejoinTarget.id)}
                 >
-                  Znovu se připojit k „{rejoinTarget.name}“
+                  {t("dashboard.rejoin", { name: rejoinTarget.name })}
                 </button>
               )}
             </div>

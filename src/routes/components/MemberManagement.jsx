@@ -1,6 +1,7 @@
 // src/routes/components/MemberManagement.jsx
 import React, { useState } from "react";
 import MemberList from "./MemberList";
+import { usePreferences } from "../../context/PreferencesContext";
 
 function MemberManagement({
   members,
@@ -10,6 +11,7 @@ function MemberManagement({
   canLeave,
   onLeave,
 }) {
+  const { t } = usePreferences();
   const [newMemberName, setNewMemberName] = useState("");
 
   const isCurrentUserOwner = members.some(
@@ -32,10 +34,12 @@ function MemberManagement({
     <section className="panel">
       <div className="panel-header">
         <div>
-          <div className="panel-eyebrow">Sdílený seznam</div>
-          <h2>Členové seznamu</h2>
+          <div className="panel-eyebrow">{t("members.eyebrow")}</div>
+          <h2>{t("members.title")}</h2>
         </div>
-        <span className="row-label-muted">{members.length} celkem</span>
+        <span className="row-label-muted">
+          {t("common.total", { count: members.length })}
+        </span>
       </div>
 
       <MemberList
@@ -50,7 +54,7 @@ function MemberManagement({
           <input
             type="text"
             className="inline-input"
-            placeholder="Jméno nebo e-mail"
+            placeholder={t("members.inputPlaceholder")}
             value={newMemberName}
             onChange={(event) => setNewMemberName(event.target.value)}
           />
@@ -59,7 +63,7 @@ function MemberManagement({
             className="btn btn-primary"
             disabled={!newMemberName.trim()}
           >
-            Pozvat člena
+            {t("members.invite")}
           </button>
         </form>
       )}
@@ -67,7 +71,7 @@ function MemberManagement({
       {canLeave && !isCurrentUserOwner && (
         <div className="detail-inline-form">
           <button type="button" className="btn btn-danger" onClick={onLeave}>
-            Odejít ze seznamu
+            {t("members.leave")}
           </button>
         </div>
       )}

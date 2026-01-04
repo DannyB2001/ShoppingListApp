@@ -1,7 +1,9 @@
 // src/routes/components/AddItemForm.jsx
 import React, { useState } from "react";
+import { usePreferences } from "../../context/PreferencesContext";
 
 function AddItemForm({ onAdd }) {
+  const { t } = usePreferences();
   const [value, setValue] = useState("");
 
   function handleSubmit(event) {
@@ -18,7 +20,7 @@ function AddItemForm({ onAdd }) {
         type="text"
         className="inline-input"
         value={value}
-        placeholder="Co je potřeba dokoupit?"
+        placeholder={t("items.addPlaceholder")}
         onChange={(event) => setValue(event.target.value)}
       />
       <button
@@ -26,7 +28,7 @@ function AddItemForm({ onAdd }) {
         className="btn btn-primary"
         disabled={!value.trim()}
       >
-        Přidat položku
+        {t("items.add")}
       </button>
     </form>
   );

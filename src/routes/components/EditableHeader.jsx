@@ -1,5 +1,6 @@
 // src/routes/components/EditableHeader.jsx
 import React, { useEffect, useState } from "react";
+import { usePreferences } from "../../context/PreferencesContext";
 
 function EditableHeader({
   listName,
@@ -10,6 +11,7 @@ function EditableHeader({
   onSave,
   level = 1,
 }) {
+  const { t } = usePreferences();
   const title = listName ?? initialValue ?? "";
   const action = onRename ?? onSave;
   const [editing, setEditing] = useState(false);
@@ -48,7 +50,7 @@ function EditableHeader({
               autoFocus
             />
             <button type="submit" className="btn btn-primary">
-              Uložit
+              {t("common.save")}
             </button>
             <button
               type="button"
@@ -58,7 +60,7 @@ function EditableHeader({
                 setValue(title);
               }}
             >
-              Zrušit
+              {t("common.cancel")}
             </button>
           </form>
         ) : (
@@ -69,15 +71,15 @@ function EditableHeader({
                 type="button"
                 className="icon-button"
                 onClick={() => setEditing(true)}
-                aria-label="Přejmenovat seznam"
+                aria-label={t("ownerLists.renameAria")}
               >
-                Upravit
+                {t("common.edit")}
               </button>
             )}
           </div>
         )}
         {isInitialState && (
-          <div className="title-subtext">Nový vytvořený seznam</div>
+          <div className="title-subtext">{t("ownerLists.newList")}</div>
         )}
       </div>
     </header>

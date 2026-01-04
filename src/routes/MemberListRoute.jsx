@@ -2,10 +2,14 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getMemberDashboardLists } from "../services/listService";
+import AppToolbar from "./components/AppToolbar";
+import ListOverviewChart from "./components/ListOverviewChart";
+import { usePreferences } from "../context/PreferencesContext";
 
 function MemberListRoute() {
+  const { t } = usePreferences();
   const navigate = useNavigate();
-  const identity = { id: "user-1", name: "Daniel Novák" };
+  const identity = { id: "user-1", name: "Daniel Novak" };
 
   const [lists, setLists] = useState([]);
   const [loadState, setLoadState] = useState({ status: "pending", error: null });
@@ -28,7 +32,7 @@ function MemberListRoute() {
         }
       } catch (error) {
         if (!cancelled) {
-          setLoadState({ status: "error", error: "Nepodařilo se načíst seznamy." });
+          setLoadState({ status: "error", error: t("memberLists.loadError") });
         }
       }
     }
@@ -36,7 +40,7 @@ function MemberListRoute() {
     return () => {
       cancelled = true;
     };
-  }, [identity.id]);
+  }, [identity.id, t]);
 
   const memberLists = useMemo(() => {
     return lists.filter((list) => {
@@ -46,46 +50,58 @@ function MemberListRoute() {
     });
   }, [lists, identity.id]);
 
+  const chartData = useMemo(
+    () =>
+      memberLists.map((list) => ({
+        name: list.name,
+        itemsCount: list.itemsCount ?? 0,
+      })),
+    [memberLists]
+  );
+
   return (
     <div className="page-root">
       <div className="page-card">
+        <AppToolbar />
         <header className="detail-header">
           <div className="detail-title-block">
             <div className="title-row">
-              <h1 className="title-text">Seznamy, kde jsem člen</h1>
+              <h1 className="title-text">{t("memberLists.title")}</h1>
             </div>
-            <p className="title-subtext">
-              Aktuální přehled nákupních seznamů, kam tě někdo pozval.
-            </p>
+            <p className="title-subtext">{t("memberLists.subtitle")}</p>
           </div>
-          <button
-            type="button"
-            className="btn btn-ghost"
-            onClick={() => navigate("/")}
-          >
-            ← Hlavní stránka
+          <button type="button" className="btn btn-ghost" onClick={() => navigate("/")}>
+            {"<-"} {t("memberLists.home")}
           </button>
         </header>
+
+        <section className="panel chart-panel">
+          <div className="panel-header">
+            <div>
+              <div className="panel-eyebrow">{t("memberLists.eyebrow")}</div>
+              <h2>{t("memberLists.chartTitle")}</h2>
+            </div>
+          </div>
+          <ListOverviewChart data={chartData} />
+        </section>
 
         <section className="panel">
           <div className="panel-header">
             <div>
-              <div className="panel-eyebrow">Členský pohled</div>
-              <h2>Aktivní seznamy</h2>
+              <div className="panel-eyebrow">{t("memberLists.eyebrow")}</div>
+              <h2>{t("memberLists.activeTitle")}</h2>
             </div>
-            <span className="row-label-muted">
-              {memberLists.length} celkem
-            </span>
+            <span className="row-label-muted">{t("common.total", { count: memberLists.length })}</span>
           </div>
 
           {loadState.status === "pending" && (
-            <p className="row-label-muted">Načítám seznamy…</p>
+            <p className="row-label-muted">{t("dashboard.loading")}</p>
           )}
           {loadState.status === "error" && (
             <p className="row-label-muted">{loadState.error}</p>
           )}
           {!memberLists.length && loadState.status === "ready" && (
-            <p className="row-label-muted">Nejsi členem žádného seznamu.</p>
+            <p className="row-label-muted">{t("memberLists.empty")}</p>
           )}
 
           <div className="list-grid">
@@ -94,19 +110,19 @@ function MemberListRoute() {
                 <div className="list-card-row">
                   <h3>{list.name}</h3>
                 </div>
-          <div className="list-card-body">
-            <div className="list-card-row">
-              <span className="row-label-muted">
-                {list.members.length} členů, {list.unresolvedCount ?? 0} nevyřešených / {list.itemsCount ?? 0} položek
-              </span>
-            </div>
+                <div className="list-card-body">
                   <div className="list-card-row">
-                    <Link
-                      className="btn btn-primary"
-                      to={`/member_list/${list.id}`}
-                      state={{ list }}
-                    >
-                      Otevřít
+                    <span className="row-label-muted">
+                      {t("common.membersCount", { count: list.members.length })},{" "}
+                      {t("listCard.unresolvedSummary", {
+                        unresolved: list.unresolvedCount ?? 0,
+                        total: list.itemsCount ?? 0,
+                      })}
+                    </span>
+                  </div>
+                  <div className="list-card-row">
+                    <Link className="btn btn-primary" to={`/member_list/${list.id}`} state={{ list }}>
+                      {t("common.open")}
                     </Link>
                   </div>
                 </div>

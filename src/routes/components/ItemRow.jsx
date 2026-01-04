@@ -1,7 +1,9 @@
 // src/routes/components/ItemRow.jsx
 import React, { useEffect, useState } from "react";
+import { usePreferences } from "../../context/PreferencesContext";
 
 function ItemRow({ item, onEdit, onDelete, onToggle }) {
+  const { t } = usePreferences();
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(item.name);
 
@@ -44,14 +46,14 @@ function ItemRow({ item, onEdit, onDelete, onToggle }) {
               autoFocus
             />
             <button type="submit" className="btn btn-primary btn-small">
-              Uložit
+              {t("common.save")}
             </button>
             <button
               type="button"
               className="btn btn-ghost btn-small"
               onClick={handleCancelEdit}
             >
-              Zrušit
+              {t("common.cancel")}
             </button>
           </form>
         ) : (
@@ -72,14 +74,14 @@ function ItemRow({ item, onEdit, onDelete, onToggle }) {
             className="btn btn-ghost btn-small"
             onClick={() => setEditing(true)}
           >
-            Upravit
+            {t("common.edit")}
           </button>
           <button
             type="button"
             className="btn btn-ghost btn-small"
             onClick={onDelete}
           >
-            Smazat
+            {t("common.delete")}
           </button>
         </div>
       )}

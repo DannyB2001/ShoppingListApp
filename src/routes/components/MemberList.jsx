@@ -1,12 +1,13 @@
 // src/routes/components/MemberList.jsx
 import React from "react";
 import MemberRow from "./MemberRow";
+import { usePreferences } from "../../context/PreferencesContext";
 
 function MemberList({ members, currentUserId, onRemoveMember, canManage }) {
+  const { t } = usePreferences();
+
   if (!members.length) {
-    return (
-      <p className="row-label-muted">Zatím nemáš v seznamu žádné členy.</p>
-    );
+    return <p className="row-label-muted">{t("members.empty")}</p>;
   }
 
   return (

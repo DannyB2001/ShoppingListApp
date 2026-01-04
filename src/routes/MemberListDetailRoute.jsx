@@ -13,13 +13,15 @@ import {
   updateItemInList,
   removeItemFromList,
 } from "../services/listService";
+import { usePreferences } from "../context/PreferencesContext";
 
 function MemberListDetailRoute() {
+  const { t } = usePreferences();
   const { listId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
 
-  const identity = { id: "user-1", name: "Daniel Novák" };
+  const identity = { id: "user-1", name: "Daniel Novak" };
 
   const passedList = location.state?.list;
 
@@ -36,7 +38,7 @@ function MemberListDetailRoute() {
     }
     return source.map((id, index) => ({
       id,
-      name: `Uživatel ${index + 1}`,
+      name: `User ${index + 1}`,
       isOwner: id === (passedList?.ownerId ?? "user-1"),
     }));
   }
@@ -71,7 +73,7 @@ function MemberListDetailRoute() {
         }
       } catch (error) {
         if (!cancelled) {
-          setLoadState({ status: "error", error: "Nepodařilo se načíst detail seznamu." });
+          setLoadState({ status: "error", error: t("detail.loadError") });
         }
       }
     }
@@ -79,13 +81,13 @@ function MemberListDetailRoute() {
     return () => {
       cancelled = true;
     };
-  }, [listId, passedList]);
+  }, [listId, passedList, t]);
 
   if (loadState.status === "pending" || !shoppingList) {
     return (
       <div className="page-root">
         <div className="page-card">
-          <p className="row-label-muted">Načítám detail seznamu…</p>
+          <p className="row-label-muted">{t("detail.loading")}</p>
         </div>
       </div>
     );
@@ -96,12 +98,8 @@ function MemberListDetailRoute() {
       <div className="page-root">
         <div className="page-card">
           <p className="row-label-muted">{loadState.error}</p>
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={() => navigate("/member_dashboard")}
-          >
-            Zpět na přehled
+          <button type="button" className="btn btn-primary" onClick={() => navigate("/member_dashboard")}>
+            {t("common.backToOverview")}
           </button>
         </div>
       </div>
@@ -117,7 +115,7 @@ function MemberListDetailRoute() {
         const updated = await updateListName({ id: listId, name: trimmed });
         applyListState(updated);
       } catch (error) {
-        setActionError("Přejmenování se nezdařilo.");
+        setActionError(t("detail.renameError"));
       }
     })();
   }
@@ -131,12 +129,12 @@ function MemberListDetailRoute() {
         try {
           await createMember({ id: memberId, name });
         } catch (error) {
-          // pokud už existuje, pokračujeme dál
+          // continue if already exists
         }
         const updated = await addMemberToList({ id: listId, memberId, isOwner: false });
         applyListState(updated);
       } catch (error) {
-        setActionError("Přidání člena se nezdařilo.");
+        setActionError(t("detail.addMemberError"));
       }
     })();
   }
@@ -148,7 +146,7 @@ function MemberListDetailRoute() {
         const updated = await removeMemberFromList({ id: listId, memberId });
         applyListState(updated);
       } catch (error) {
-        setActionError("Odebrání člena se nezdařilo.");
+        setActionError(t("detail.removeMemberError"));
       }
     })();
   }
@@ -162,7 +160,7 @@ function MemberListDetailRoute() {
         const updated = await addItemToList({ id: listId, name: trimmed });
         applyListState(updated);
       } catch (error) {
-        setActionError("Přidání položky se nezdařilo.");
+        setActionError(t("detail.addItemError"));
       }
     })();
   }
@@ -176,7 +174,7 @@ function MemberListDetailRoute() {
         const updated = await updateItemInList({ id: listId, itemId, name: trimmed });
         applyListState(updated);
       } catch (error) {
-        setActionError("Úprava položky se nezdařila.");
+        setActionError(t("detail.editItemError"));
       }
     })();
   }
@@ -188,7 +186,7 @@ function MemberListDetailRoute() {
         const updated = await removeItemFromList({ id: listId, itemId });
         applyListState(updated);
       } catch (error) {
-        setActionError("Smazání položky se nezdařilo.");
+        setActionError(t("detail.deleteItemError"));
       }
     })();
   }
@@ -200,7 +198,7 @@ function MemberListDetailRoute() {
         const updated = await updateItemInList({ id: listId, itemId, isResolved });
         applyListState(updated);
       } catch (error) {
-        setActionError("Aktualizace položky se nezdařila.");
+        setActionError(t("detail.updateItemError"));
       }
     })();
   }
@@ -210,7 +208,7 @@ function MemberListDetailRoute() {
   }
 
   function handleShareList() {
-    alert("Sdílení seznamu pro členy zatím není připraveno.");
+    alert(t("detail.shareUnavailableMember"));
   }
 
   function handleBack() {
@@ -224,7 +222,7 @@ function MemberListDetailRoute() {
         await removeMemberFromList({ id: listId, memberId: identity.id });
         navigate("/member_dashboard");
       } catch (error) {
-        setActionError("Odebrání ze seznamu se nezdařilo.");
+        setActionError(t("detail.leaveError"));
       }
     })();
   }

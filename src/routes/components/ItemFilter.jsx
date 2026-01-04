@@ -1,7 +1,10 @@
 // src/routes/components/ItemFilter.jsx
 import React from "react";
+import { usePreferences } from "../../context/PreferencesContext";
 
 function ItemFilter({ filterActive, onToggle }) {
+  const { t } = usePreferences();
+
   return (
     <button
       type="button"
@@ -9,7 +12,7 @@ function ItemFilter({ filterActive, onToggle }) {
       onClick={onToggle}
       aria-pressed={filterActive}
     >
-      {filterActive ? "Zobrazit všechny položky" : "Jen nevyřešené"}
+      {filterActive ? t("items.showAll") : t("items.showUnresolved")}
     </button>
   );
 }
