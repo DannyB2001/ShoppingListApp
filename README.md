@@ -1,9 +1,9 @@
-# Shopping List App (HW-4)
+# Shopping List App (HW-5)
 
 Shared shopping list app built with React. This HW4 version builds on HW3 and adds
 charts (Recharts), UI theming, and simple localization.
 
-## New in HW4
+## New in HW5
 - Dashboard list overview chart (item counts per list).
 - Detail view pie chart (resolved vs unresolved items).
 - Light/Dark theme toggle.
